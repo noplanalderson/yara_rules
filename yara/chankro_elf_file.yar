@@ -3,7 +3,8 @@ rule Detect_ELF_SO_File_64bit_With_Sections {
         description = "Detects ELF 64-bit shared object (.so) files with section header analysis"
         author = "Mr. Naeem"
         created = "2024-12-16"
-        version = "1.1"
+        updated = "2025-03-19"
+        version = "1.2"
         elf_magic = "7f454c46"  // ELF magic: 0x7f 45 4c 46
         // elf_type = "02"         // Type: DYN (Shared object file)
         // elf_class = "02"        // Class: ELF64 (64-bit)
@@ -38,5 +39,7 @@ rule Detect_ELF_SO_File_64bit_With_Sections {
         // $elf_machine_x86_64 at 18 and
 
         // Memastikan file memiliki salah satu nama section yang relevan
-        any of ($section_note, $section_gnu_hash, $section_dynsym, $section_dynstr, $section_rela_dyn, $section_rela_plt, $pwn)
+        all of ($elf_class_64, $elf_type_dyn, $pwn) and
+        (1 of ($section_note, $section_gnu_hash, $section_dynsym, $section_dynstr, $section_rela_dyn, $section_rela_plt))
+        // any of ($section_note, $section_gnu_hash, $section_dynsym, $section_dynstr, $section_rela_dyn, $section_rela_plt, $pwn)
 }
