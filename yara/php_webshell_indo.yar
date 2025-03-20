@@ -63,3 +63,36 @@ rule Detect_Malicious_PHP_Galerz {
         all of ($php_tag, $func1, $func2, $func3, $func4) and
         (1 of ($title, $str1, $str2, $str3))
 }
+
+rule MaliciousHTAccess 
+{
+    meta:
+        description = "Detects potentially malicious .htaccess files with suspicious rewrite rules and file restrictions"
+        author = "Mr. Naeem"
+        date = "2025-03-20"
+        version = "1.0"
+
+    strings:
+        $rewriteEngine = "RewriteEngine on"
+        $rewriteRuleIndex = "RewriteRule ^(.*)$ index.php/$1 [L,QSA]"
+        $rewriteCondFile = "RewriteCond %{REQUEST_FILENAME} !-f"
+        $rewriteCondDir = "RewriteCond %{REQUEST_FILENAME} !-d"
+
+        $redirectToHttps = "RewriteCond %{HTTPS} off"
+        $redirectRuleHttps = "RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]"
+
+        $filesMatchMalicious = /<FilesMatch \".*(php|asp|aspx|exe|pht|shtm|phar|bak|pdf|zip|doc|txt|jpg|jpeg|png|gif|unknown).*\">/
+        $denyAll = "Deny from all"
+        
+        $wpIncludesBlock = "RewriteRule ^wp-includes/[^/]+\\.php$ - [F,L]"
+        $wpAdminBlock = "RewriteRule ^wp-admin/includes/ - [F,L]"
+        
+        $cpanelPHPHandler = "AddHandler application/x-httpd-ea-php"
+
+    condition:
+        (all of ($rewriteEngine, $rewriteRuleIndex, $rewriteCondFile, $rewriteCondDir)) or 
+        (all of ($redirectToHttps, $redirectRuleHttps)) or 
+        (all of ($filesMatchMalicious, $denyAll)) or 
+        (any of ($wpIncludesBlock, $wpAdminBlock)) or 
+        ($cpanelPHPHandler)
+}
