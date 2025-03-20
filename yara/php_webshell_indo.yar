@@ -68,9 +68,9 @@ rule MaliciousHTAccess
 {
     meta:
         description = "Detects potentially malicious .htaccess files with suspicious rewrite rules and file restrictions"
-        author = "Mr. Naeem"
+        author = "Security Engineer"
         date = "2025-03-20"
-        version = "1.0"
+        version = "1.1"
 
     strings:
         $rewriteEngine = "RewriteEngine on"
@@ -81,7 +81,7 @@ rule MaliciousHTAccess
         $redirectToHttps = "RewriteCond %{HTTPS} off"
         $redirectRuleHttps = "RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]"
 
-        $filesMatchMalicious = /<FilesMatch \".*(php|asp|aspx|exe|pht|shtm|phar|bak|pdf|zip|doc|txt|jpg|jpeg|png|gif|unknown).*\">/
+        $filesMatchMalicious = /<FilesMatch \".{1,100}(php|asp|aspx|exe|pht|shtm|phar|bak|pdf|zip|doc|txt|jpg|jpeg|png|gif|unknown).{0,100}\">/
         $denyAll = "Deny from all"
         
         $wpIncludesBlock = "RewriteRule ^wp-includes/[^/]+\\.php$ - [F,L]"
