@@ -52,15 +52,14 @@ rule Detect_Malicious_PHP_Galerz {
         $php_tag = "<?php"
         $title = "gALerZ xh33L b4cKdDoRz" nocase
         $func1 = "get_magic_quotes_gpc"
-        $func2 = "set_magic_quotes_runtime"
-        $func3 = "is_writable"
-        $func4 = "is_readable"
-        $func5 = "file_get_contents"
+        $func2 = "is_writable"
+        $func3 = "is_readable"
+        $func4 = "file_get_contents"
         $str1  = "<input type=\"submit\" value=\"gALerZ\" />" nocase wide ascii
         $str2  = "$_GET['filesrc']" nocase
         $str3  = "$_POST['opt']" nocase
     
     condition:
         all of ($php_tag, $func1, $func2, $func3, $func4) and
-        (1 of ($title, $str1, $str2, $str3, $func5))
+        (1 of ($title, $str1, $str2, $str3))
 }
