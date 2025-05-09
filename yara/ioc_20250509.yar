@@ -59,7 +59,7 @@ rule ELF_Suspicious_Backdoor_Activity
         $binbash = "/bin/bash" ascii
 
         // Optimized IP address pattern
-        $netip = /(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/ ascii
+        $netip = /(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})/ ascii
 
         // Optional: Network-related indicators
         $netcall = /connect\s*\([^;]+sockaddr/ ascii
@@ -91,7 +91,7 @@ rule Cron_Backdoor_Persistence
 
     strings:
         // Crontab context (cron schedule format: minute, hour, day, month, weekday)
-        $cron_context = /([^\n]+\s+){5}/ ascii
+        $cron_context = /([^\n]{1,20}\s+){5}/ ascii
 
         // Suspicious commands with bounded patterns
         $c1 = /wget\s+http[s]?:\/\/[a-zA-Z0-9\.\-_\/]{1,100}/ ascii nocase
