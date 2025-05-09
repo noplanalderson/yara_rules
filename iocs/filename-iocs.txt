@@ -4428,4 +4428,10 @@ C:\\perflogs\\RunSchedulerTaskOnce\.ps1;85
 \\healthchecktemplate\.txt;75
 \\healthcheck\.txt;60
 
+C:\Users\admin\AppData\Local\Microsoft\Edge\User Data\Default\bda8a2c5-7ee9-4277-8ad4-13167e9c786e.tmp
+C:\Users\admin\AppData\Local\Microsoft\Edge\User Data\Last Browser
+C:\Users\admin\AppData\Local\Temp\chrome_Unpacker_BeginUnzipping7640_180337037\page_embed_script.js
+C:\Users\admin\AppData\Local\Temp\chrome_Unpacker_BeginUnzipping7640_180337037\offscreendocument_main.js
+C:\Users\admin\AppData\Local\Temp\chrome_Unpacker_BeginUnzipping7640_180337037\service_worker_bin_prod.js
+
 # End

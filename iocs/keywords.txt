@@ -30,4 +30,11 @@ Powersploit
 # Powershell Mimikatz https://adsecurity.org/?p=2604
 Invoke-Mimikatz
 
+# IOC 2025/05/09
+/bin/sh -c "sudo chown user /tmp/atd\.elf  && chmod +x /tmp/atd\.elf && DISPLAY=:0 sudo -i /tmp/atd\.elf "
+sh -c "iptables -t nat -F 2> /dev/null"
+sh -c "iptables -t mangle -F 2> /dev/null"
+sh -c "iptables -P FORWARD ACCEPT 2> /dev/null"
+sh -c "iptables -P OUTPUT ACCEPT 2> /dev/null"
+
 # Don't remove this line
