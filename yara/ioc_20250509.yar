@@ -3,19 +3,19 @@ rule Bashrc_Backdoor_Persistence
     meta:
         description = "Detects backdoors or persistence mechanisms in .bashrc or .profile files"
         author = "TangerangKota-CSIRT, refined by Grok"
-        version = "1.1"
+        version = "1.2"
         date = "2025-05-09"
-        reference = "https://x.ai/grok"
+        reference = "https://chatgpt.com"
 
     strings:
         // Filepath patterns to ensure context
-        $file_context = /(^|\n)\s*(source|\.)\s+.*(bashrc|profile)/ ascii nocase
+        $file_context = /(^|\n)\s*(source|\.)\s+.{1,100}(bashrc|profile)/ ascii nocase
 
         // Suspicious commands with bounded patterns
         $b1 = /curl\s+https?:\/\/[a-zA-Z0-9\.\-_\/]{1,100}/ ascii nocase
         $b2 = /wget\s+https?:\/\/[a-zA-Z0-9\.\-_\/]{1,100}/ ascii nocase
         $b3 = /\/tmp\/[a-zA-Z0-9\._\-]{1,50}\.sh/ ascii
-        $b4 = /echo\s+.*base64\s+-d\s*>>\s*[^\s]+/ ascii
+        $b4 = /echo\s+.{1,100}base64\s+-d\s*>>\s*[^\s]+/ ascii
         $b5 = /bash\s+-c\s+['"][a-zA-Z0-9\s\/\-\_\.\|&;]{1,100}['"]/ ascii
         $b6 = /nohup\s+[a-zA-Z0-9\s\/\-\_\.\|&;]{1,100}\s*\&/ ascii
         $b7 = /eval\s+\$[a-zA-Z0-9_]{1,50}/ ascii
@@ -38,9 +38,9 @@ rule ELF_Suspicious_Backdoor_Activity
         author = "TangerangKota-CSIRT, refined by Grok"
         description = "Detects ELF binaries with potential backdoor behavior involving exec, fork, sleep, and network activity"
         threat_level = "high"
-        version = "1.1"
+        version = "1.2"
         date = "2025-05-09"
-        reference = "https://x.ai/grok"
+        reference = "https://chatgpt.com"
 
     strings:
         // Function names for execution and process control
@@ -59,7 +59,7 @@ rule ELF_Suspicious_Backdoor_Activity
         $binbash = "/bin/bash" ascii
 
         // Optimized IP address pattern
-        $netip = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/ ascii
+        $netip = /(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/ ascii
 
         // Optional: Network-related indicators
         $netcall = /connect\s*\([^;]+sockaddr/ ascii
@@ -91,7 +91,7 @@ rule Cron_Backdoor_Persistence
 
     strings:
         // Crontab context (cron schedule format: minute, hour, day, month, weekday)
-        $cron_context = /\b((\*|[0-5]?[0-9])([\/,-][0-5]?[0-9])*\s+){5}/ ascii
+        $cron_context = /([^\n]+\s+){5}/ ascii
 
         // Suspicious commands with bounded patterns
         $c1 = /wget\s+http[s]?:\/\/[a-zA-Z0-9\.\-_\/]{1,100}/ ascii nocase
