@@ -115,71 +115,71 @@ rule Cron_Backdoor_Persistence
         )
 }
 
-rule Linux_Generic_Backdoor_Detector
-{
-    meta:
-        description = "Detect potential Linux backdoor/malware in ELF, binaries or C source code"
-        author = "TangerangKota-CSIRT"
-        version = "1.0"
-        date = "2025-04-30"
-        category = "Linux Threat Detection"
+# rule Linux_Generic_Backdoor_Detector
+# {
+#     meta:
+#         description = "Detect potential Linux backdoor/malware in ELF, binaries or C source code"
+#         author = "TangerangKota-CSIRT"
+#         version = "1.0"
+#         date = "2025-04-30"
+#         category = "Linux Threat Detection"
 
-    strings:
-        // ELF Header
-        $elf = { 7F 45 4C 46 }
+#     strings:
+#         // ELF Header
+#         $elf = { 7F 45 4C 46 }
 
-        // Suspicious Function
-        $c1 = "system(" ascii
-        $c2 = "popen(" ascii
-        $c3 = "execve(" ascii
-        $c4 = "execl(" ascii
-        $c5 = "fork(" ascii
-        $c6 = "dlopen(" ascii
-        $c7 = "LD_PRELOAD" ascii
-        $c8 = "ptrace" ascii
-        $c9 = "kill(" ascii
-        $c10 = "strcpy(" ascii
-        $c11 = "gets(" ascii
+#         // Suspicious Function
+#         $c1 = "system(" ascii
+#         $c2 = "popen(" ascii
+#         $c3 = "execve(" ascii
+#         $c4 = "execl(" ascii
+#         $c5 = "fork(" ascii
+#         $c6 = "dlopen(" ascii
+#         $c7 = "LD_PRELOAD" ascii
+#         $c8 = "ptrace" ascii
+#         $c9 = "kill(" ascii
+#         $c10 = "strcpy(" ascii
+#         $c11 = "gets(" ascii
 
-        // Backdooring Commands
-        $s1 = "/bin/sh" ascii
-        $s2 = "/bin/bash" ascii
-        $s3 = "chmod +x" ascii
-        $s4 = "wget http" ascii
-        $s5 = "curl http" ascii
-        $s6 = "nohup" ascii
-        $s7 = "sleep 666" ascii
-        $s8 = "echo -e" ascii
-        $s9 = "base64 -d" ascii
+#         // Backdooring Commands
+#         $s1 = "/bin/sh" ascii
+#         $s2 = "/bin/bash" ascii
+#         $s3 = "chmod +x" ascii
+#         $s4 = "wget http" ascii
+#         $s5 = "curl http" ascii
+#         $s6 = "nohup" ascii
+#         $s7 = "sleep 666" ascii
+#         $s8 = "echo -e" ascii
+#         $s9 = "base64 -d" ascii
 
-        // Suspicious Network
-        $n1 = "0.0.0.0"
-        $n2 = "127.0.0.1"
-        $n3 = "PORT="
-        $n4 = "connect(" ascii
-        $n5 = "socket(" ascii
-        $n6 = "inet_" ascii
-        $n7 = "bind(" ascii
+#         // Suspicious Network
+#         $n1 = "0.0.0.0"
+#         $n2 = "127.0.0.1"
+#         $n3 = "PORT="
+#         $n4 = "connect(" ascii
+#         $n5 = "socket(" ascii
+#         $n6 = "inet_" ascii
+#         $n7 = "bind(" ascii
 
-        // Malware C2 IPs
-        $ip1 = "66.29.130.61"
-        $ip2 = "192.68.69.153"
+#         // Malware C2 IPs
+#         $ip1 = "66.29.130.61"
+#         $ip2 = "192.68.69.153"
 
-        // Malware IoC Hash
-        $h1 = "d41d8cd98f00b204e9800998ecf8427e"
-        $h2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+#         // Malware IoC Hash
+#         $h1 = "d41d8cd98f00b204e9800998ecf8427e"
+#         $h2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
-    condition:
-        // Target ELF binaries
-        (uint32(0) == 0x464c457f or any of ($c*)) and
-        (
-            3 of ($s*) or
-            3 of ($c*) or
-            2 of ($n*) or
-            any of ($ip*) or
-            any of ($h*)
-        ) or all of them
-}
+#     condition:
+#         // Target ELF binaries
+#         (uint32(0) == 0x464c457f or any of ($c*)) and
+#         (
+#             3 of ($s*) or
+#             3 of ($c*) or
+#             2 of ($n*) or
+#             any of ($ip*) or
+#             any of ($h*)
+#         ) or all of them
+# }
 
 rule Linux_Rootkit_ATD_Family
 {
