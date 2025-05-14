@@ -283,48 +283,48 @@ rule Linux_Rootkit_ATD_Family2
         ) or all of them
 }
 
-rule Linux_Persistence_Techniques
-{
-    meta:
-        description = "Detect Linux rootkit persistence on LD_PRELOAD, Cron, or Systemd Service Injection"
-        author = "TangerangKota-CSIRT"
-        date = "2025-04-30"
-        version = "1.0"
+# rule Linux_Persistence_Techniques
+# {
+#     meta:
+#         description = "Detect Linux rootkit persistence on LD_PRELOAD, Cron, or Systemd Service Injection"
+#         author = "TangerangKota-CSIRT"
+#         date = "2025-04-30"
+#         version = "1.0"
 
-    strings:
-        // LD_PRELOAD Detect
-        $ld1 = "LD_PRELOAD" nocase ascii
-        $ld2 = "/etc/ld.so.preload" ascii
-        $ld3 = "export LD_PRELOAD=" ascii
+#     strings:
+#         // LD_PRELOAD Detect
+#         $ld1 = "LD_PRELOAD" nocase ascii
+#         $ld2 = "/etc/ld.so.preload" ascii
+#         $ld3 = "export LD_PRELOAD=" ascii
 
-        // Cron Persistence
-        $cron1 = "/etc/cron.d/" ascii
-        $cron2 = "/var/spool/cron/" ascii
-        $cron3 = "/etc/crontab" ascii
-        $cron4 = "* * * * *" ascii
+#         // Cron Persistence
+#         $cron1 = "/etc/cron.d/" ascii
+#         $cron2 = "/var/spool/cron/" ascii
+#         $cron3 = "/etc/crontab" ascii
+#         $cron4 = "* * * * *" ascii
 
-        // Systemd Service Hijack
-        $sysd1 = "[Service]" ascii
-        $sysd2 = "ExecStart=" ascii
-        $sysd3 = "/etc/systemd/system/" ascii
-        $sysd4 = "Type=forking" ascii
-        $sysd5 = "Restart=always" ascii
+#         // Systemd Service Hijack
+#         $sysd1 = "[Service]" ascii
+#         $sysd2 = "ExecStart=" ascii
+#         $sysd3 = "/etc/systemd/system/" ascii
+#         $sysd4 = "Type=forking" ascii
+#         $sysd5 = "Restart=always" ascii
 
-        // Suspicious Command Injection
-        $cmd1 = "wget http" ascii
-        $cmd2 = "curl http" ascii
-        $cmd3 = "base64 -d" ascii
-        $cmd4 = "chmod +x" ascii
-        $cmd5 = "nohup" ascii
+#         // Suspicious Command Injection
+#         $cmd1 = "wget http" ascii
+#         $cmd2 = "curl http" ascii
+#         $cmd3 = "base64 -d" ascii
+#         $cmd4 = "chmod +x" ascii
+#         $cmd5 = "nohup" ascii
 
-    condition:
-        filesize < 5MB and
-        (
-            2 of ($ld*) or
-            2 of ($cron*) or
-            3 of ($sysd*) or
-            (
-                any of ($cmd*) and 1 of ($ld*, $cron*, $sysd*)
-            )
-        ) or all of them
-}
+#     condition:
+#         filesize < 5MB and
+#         (
+#             2 of ($ld*) or
+#             2 of ($cron*) or
+#             3 of ($sysd*) or
+#             (
+#                 any of ($cmd*) and 1 of ($ld*, $cron*, $sysd*)
+#             )
+#         ) or all of them
+# }
