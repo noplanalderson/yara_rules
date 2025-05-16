@@ -411,9 +411,6 @@ rule Generic_SelfExtracting_Script
         // Executing extracted content (likely deploy.sh or similar)
         $exec_extracted = /cd\s+\"\$\{[^}]+\}\"\s+&&.*\.(\/)?[a-zA-Z0-9_\-\.]+/ nocase
 
-        // Optional: Cleanup
-        $rm_pkg_dir = /rm\s+-rf\s+\.\?\/?\$\{[^}]+\}/
-
     condition:
         $shebang and
         $read_self and
