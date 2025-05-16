@@ -428,9 +428,9 @@ rule PHP_Remote_Fetch_Google_Cloaker
         description = "Detects PHP script that fetches remote content with Googlebot IP validation"
         author = "TangerangKota-CSIRT"
         date = "2025-05-16"
-    
+
     strings:
-        $url1 = "https://sayangterrytulang.syd1.digitaloceanspaces.com/readtangerang.txt"
+        $url1 = /https?:\/\/[a-zA-Z0-9\.\-_]+\/[a-zA-Z0-9\.\-_\/]*readtangerang\.txt/ nocase
         $url2 = "https://www.gstatic.com/ipranges/goog.json"
         $func1 = "ip_in_range("
         $func2 = "fetch_ip_ranges("
@@ -438,14 +438,19 @@ rule PHP_Remote_Fetch_Google_Cloaker
         $cf_ip = "HTTP_CF_CONNECTING_IP"
         $ua_check = "strtolower($_SERVER['HTTP_USER_AGENT'])"
         $ip_range_loop = "foreach($google_ip_ranges as $range)"
-    
+
     condition:
-        all of ($url* or $func*) and
-        $cf_ip and
-        $cookie_check and
-        $ua_check and
-        $ip_range_loop
+        // match at least one url and one function
+        (
+            any of ($url*) and
+            any of ($func*)
+        )
+        and $cf_ip
+        and $cookie_check
+        and $ua_check
+        and $ip_range_loop
 }
+
 
 rule PHP_Bot_UA_Remote_Response
 {
@@ -455,7 +460,6 @@ rule PHP_Bot_UA_Remote_Response
         date = "2025-05-16"
     
     strings:
-        $url1 = "https://opendatav2.tangerangkota.go.id/readme.txt"
         $header = "header('Vary: User-Agent')"
         $preg_match = "preg_match($botchar, $ua)"
         $botchar_def = "/(googlebot|slurp|bingbot|baiduspider|yandex|adsense|crawler|spider|inspection)/i"
@@ -465,5 +469,5 @@ rule PHP_Bot_UA_Remote_Response
         $ob_start = "ob_start()"
     
     condition:
-        3 of ($url1, $header, $preg_match, $botchar_def, $curl_init, $fopen_check, $useragent, $ob_start)
+        3 of ($header, $preg_match, $botchar_def, $curl_init, $fopen_check, $useragent, $ob_start)
 }
