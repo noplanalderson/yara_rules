@@ -59,7 +59,7 @@ rule ELF_Suspicious_Backdoor_Activity
         $binbash = "/bin/bash" ascii
 
         // Optimized IP address pattern
-        $netip = /(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))/ ascii
+        $netip = /\b\d{1,3}(\.\d{1,3}){3}\b/ ascii
 
         // Optional: Network-related indicators
         $netcall = /connect\s*\([^;]+sockaddr/ ascii
@@ -91,7 +91,7 @@ rule Cron_Backdoor_Persistence
 
     strings:
         // Crontab context (cron schedule format: minute, hour, day, month, weekday)
-        $cron_context = /^(\*|\d+)\s+(\*|\d+)\s+(\*|\d+)\s+(\*|\d+)\s+(\*|\d+)/ wide ascii
+        $cron_context = /^(\*|\d{1,2})\s+(\*|\d{1,2})\s+(\*|\d{1,2})\s+(\*|\d{1,2})\s+(\*|\d{1,2})/ wide ascii
 
         // Suspicious commands with bounded patterns
         $c1 = /wget\s+http[s]?:\/\/[a-zA-Z0-9\.\-_\/]{1,100}/ ascii nocase
@@ -361,7 +361,7 @@ rule Advanced_SSHX_Variant_Dropper
         $wget_download = /wget\s+-[^\n]*-O\s+[^\s"']+/ nocase
 
         // HTTP response validation logic (used with curl)
-        $http_code_check = /\$http_code\s*-\w+\s*200\s*.*-\w+\s*299/
+        $http_code_check = /\$http_code\s*-\w+\s*200\s*.{0,30}-\w+\s*299/
 
         // tar extraction
         $tar_cmd = /tar\s+xf\s+"?\$temp"?\s+-C\s+"?\$path"?/ nocase
