@@ -421,3 +421,51 @@ rule Generic_SelfExtracting_Script
         $exec_extracted and
         filesize < 100KB
 }
+
+rule PHP_Remote_Fetch_Google_Cloaker
+{
+    meta:
+        description = "Detects PHP script that fetches remote content with Googlebot IP validation"
+        author = "OpenAI ChatGPT"
+        date = "2025-05-16"
+        tags = ["php", "cloaking", "webshell", "bot-check", "remote-fetch"]
+    
+    strings:
+        $url1 = "https://sayangterrytulang.syd1.digitaloceanspaces.com/readtangerang.txt"
+        $url2 = "https://www.gstatic.com/ipranges/goog.json"
+        $func1 = "ip_in_range("
+        $func2 = "fetch_ip_ranges("
+        $cookie_check = "isset($_COOKIE['lp'])"
+        $cf_ip = "HTTP_CF_CONNECTING_IP"
+        $ua_check = "strtolower($_SERVER['HTTP_USER_AGENT'])"
+        $ip_range_loop = "foreach($google_ip_ranges as $range)"
+    
+    condition:
+        all of ($url* or $func*) and
+        $cf_ip and
+        $cookie_check and
+        $ua_check and
+        $ip_range_loop
+}
+
+rule PHP_Bot_UA_Remote_Response
+{
+    meta:
+        description = "Detects PHP script responding to bots with remote content"
+        author = "OpenAI ChatGPT"
+        date = "2025-05-16"
+        tags = ["php", "bot-check", "remote-fetch", "malware", "webshell"]
+    
+    strings:
+        $url1 = "https://opendatav2.tangerangkota.go.id/readme.txt"
+        $header = "header('Vary: User-Agent')"
+        $preg_match = "preg_match($botchar, $ua)"
+        $botchar_def = "/(googlebot|slurp|bingbot|baiduspider|yandex|adsense|crawler|spider|inspection)/i"
+        $curl_init = "curl_init("
+        $fopen_check = "ini_get('allow_url_fopen')"
+        $useragent = "Mozilla/5.0"
+        $ob_start = "ob_start()"
+    
+    condition:
+        3 of ($url1, $header, $preg_match, $botchar_def, $curl_init, $fopen_check, $useragent, $ob_start)
+}
