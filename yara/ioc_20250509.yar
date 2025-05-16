@@ -328,3 +328,101 @@ rule Linux_Rootkit_ATD_Family2
 //             )
 //         ) or all of them
 // }
+
+rule Advanced_SSHX_Variant_Dropper
+{
+    meta:
+        description = "Detects SSHX-style shell script downloaders using curl or wget from known/unknown domains and auto-executing binaries"
+        author = "TangerangKota-CSIRT"
+        date = "2025-05-16"
+        version = "1.0"
+        severity = "high"
+        tags = ["sshx", "dropper", "curl", "wget", "installer", "variant", "shell"]
+
+    strings:
+        // Script header
+        $shebang = "#!/bin/sh"
+
+        // Common OS and arch detection patterns
+        $uname_os = "case \"$(uname -s)\" in"
+        $uname_arch = "case \"$(uname -m)\" in"
+
+        // mktemp usage
+        $mktemp_var = "temp=$(mktemp)"
+        $mktemp_dir = "path=$(mktemp -d)"
+
+        // SSHX-specific or lookalike URL patterns
+        $url1 = "https://s3.amazonaws.com/sshx/sshx-" nocase
+        $url2 = "https://cdn.sshx.io/sshx-" nocase
+        $url3 = "https://download.sshx.io/sshx-" nocase
+        $url_generic = /https?:\/\/[a-zA-Z0-9\/\.\-_]*sshx[a-zA-Z0-9\/\.\-_]*\.tar\.gz/
+
+        // Curl or Wget usage
+        $curl_download = /curl\s.*-o\s.*\"?\$temp\"?/ nocase
+        $wget_download = /wget\s.*-O\s.*\"?\$temp\"?/ nocase
+
+        // HTTP response validation logic (used with curl)
+        $http_code_check = /"\$http_code\"\s*-lt\s*200.*-gt\s*299/
+
+        // tar extraction
+        $tar_cmd = /tar\s+xf\s+"?\$temp"?\s+-C\s+"?\$path"?/ nocase
+        $sudo_tar_cmd = /sudo\s+tar\s+xf\s+"?\$temp"?\s+-C\s+"?\$path"?/ nocase
+
+        // Execution
+        $run_bin = /"\$path\/sshx"/
+
+    condition:
+        $shebang and
+        $uname_os and
+        $uname_arch and
+        $mktemp_var and
+        $mktemp_dir and
+        1 of ($url1, $url2, $url3, $url_generic) and
+        1 of ($curl_download, $wget_download) and
+        1 of ($http_code_check, $tar_cmd, $sudo_tar_cmd) and
+        $run_bin and
+        filesize < 30KB
+}
+
+rule Generic_SelfExtracting_Script
+{
+    meta:
+        description = "Heuristically detects self-extracting shell scripts with embedded tarball and execution"
+        author = "TangerangKota-CSIRT"
+        date = "2025-05-16"
+        version = "1.0"
+        severity = "medium"
+        tags = ["heuristic", "self-extract", "bash", "dropper", "archive"]
+
+    strings:
+        $shebang = /#! ?\/(usr\/bin\/env|bin)\/(bash|sh)/
+
+        // Reads its own content
+        $read_self = /<\"?\$0\"?/
+
+        // Archive extraction from self
+        $tar_extract = /(tar\s+xfz\s+-|tar\s+xf\s+-|tar\s+--extract.*-)/
+
+        // 'head' or 'tail' used to skip script lines before tar
+        $skip_lines = /(head|tail)\s+-n["']?\$\{?lc\}?["']?\s+>\/dev\/null/
+
+        // Loop searching for marker
+        $read_loop = /while\s+read\s+-r\s+l/ nocase
+        $find_marker = /\[\[.*\".*END.*\"\s*\]\]\s*&&\s*break/ nocase
+
+        // Executing extracted content (likely deploy.sh or similar)
+        $exec_extracted = /cd\s+\"\$\{[^}]+\}\"\s+&&.*\.(\/)?[a-zA-Z0-9_\-\.]+/ nocase
+
+        // Optional: Cleanup
+        $rm_pkg_dir = /rm\s+-rf\s+\.\?\/?\$\{[^}]+\}/
+
+    condition:
+        $shebang and
+        $read_self and
+        $tar_extract and
+        $skip_lines and
+        $read_loop and
+        $find_marker and
+        $exec_extracted and
+        filesize < 100KB
+}
