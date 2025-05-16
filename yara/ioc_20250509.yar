@@ -337,7 +337,6 @@ rule Advanced_SSHX_Variant_Dropper
         date = "2025-05-16"
         version = "1.0"
         severity = "high"
-        tags = ["sshx", "dropper", "curl", "wget", "installer", "variant", "shell"]
 
     strings:
         // Script header
@@ -392,7 +391,6 @@ rule Generic_SelfExtracting_Script
         date = "2025-05-16"
         version = "1.0"
         severity = "medium"
-        tags = ["heuristic", "self-extract", "bash", "dropper", "archive"]
 
     strings:
         $shebang = /#! ?\/(usr\/bin\/env|bin)\/(bash|sh)/
