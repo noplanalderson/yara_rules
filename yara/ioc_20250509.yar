@@ -59,7 +59,7 @@ rule ELF_Suspicious_Backdoor_Activity
         $binbash = "/bin/bash" ascii
 
         // Optimized IP address pattern
-        $netip = /(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})/ ascii
+        $netip = /(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))/ ascii
 
         // Optional: Network-related indicators
         $netcall = /connect\s*\([^;]+sockaddr/ ascii
@@ -91,7 +91,7 @@ rule Cron_Backdoor_Persistence
 
     strings:
         // Crontab context (cron schedule format: minute, hour, day, month, weekday)
-        $cron_context = /([^\n]{1,20}\s+){5}/ ascii
+        $cron_context = /^(\*|\d+)\s+(\*|\d+)\s+(\*|\d+)\s+(\*|\d+)\s+(\*|\d+)/ wide ascii
 
         // Suspicious commands with bounded patterns
         $c1 = /wget\s+http[s]?:\/\/[a-zA-Z0-9\.\-_\/]{1,100}/ ascii nocase
@@ -357,11 +357,11 @@ rule Advanced_SSHX_Variant_Dropper
         $url_generic = /https?:\/\/[a-zA-Z0-9\/\.\-_]*sshx[a-zA-Z0-9\/\.\-_]*\.tar\.gz/
 
         // Curl or Wget usage
-        $curl_download = /curl\s.*-o\s.*\"?\$temp\"?/ nocase
-        $wget_download = /wget\s.*-O\s.*\"?\$temp\"?/ nocase
+        $curl_download = /curl\s+-[^\n]*-o\s+[^\s"']+/ nocase
+        $wget_download = /wget\s+-[^\n]*-O\s+[^\s"']+/ nocase
 
         // HTTP response validation logic (used with curl)
-        $http_code_check = /"\$http_code\"\s*-lt\s*200.*-gt\s*299/
+        $http_code_check = /\$http_code\s*-\w+\s*200\s*.*-\w+\s*299/
 
         // tar extraction
         $tar_cmd = /tar\s+xf\s+"?\$temp"?\s+-C\s+"?\$path"?/ nocase
@@ -406,10 +406,12 @@ rule Generic_SelfExtracting_Script
 
         // Loop searching for marker
         $read_loop = /while\s+read\s+-r\s+l/ nocase
-        $find_marker = /\[\[.*\".*END.*\"\s*\]\]\s*&&\s*break/ nocase
+        $find_marker = /\[\[\s*".{0,100}END.{0,100}"\s*\]\]\s*&&\s*break/ nocase
 
         // Executing extracted content (likely deploy.sh or similar)
-        $exec_extracted = /cd\s+\"\$\{[^}]+\}\"\s+&&.*\.(\/)?[a-zA-Z0-9_\-\.]+/ nocase
+        $exec_extracted = /cd\s+\"\$\{[^}]+\}\"\s+&&\s+(\/)?[a-zA-Z0-9_\-\.]+/ nocase
+        $exec_extracted2 = /cd\s+\"\$\{[^}]+\}\"\s+&&\s+\.\/*[a-zA-Z0-9_\-\.]+/ nocase
+
 
     condition:
         $shebang and
@@ -418,7 +420,7 @@ rule Generic_SelfExtracting_Script
         $skip_lines and
         $read_loop and
         $find_marker and
-        $exec_extracted and
+        ($exec_extracted or $exec_extracted2) and
         filesize < 100KB
 }
 
