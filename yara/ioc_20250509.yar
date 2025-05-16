@@ -426,9 +426,8 @@ rule PHP_Remote_Fetch_Google_Cloaker
 {
     meta:
         description = "Detects PHP script that fetches remote content with Googlebot IP validation"
-        author = "OpenAI ChatGPT"
+        author = "TangerangKota-CSIRT"
         date = "2025-05-16"
-        tags = ["php", "cloaking", "webshell", "bot-check", "remote-fetch"]
     
     strings:
         $url1 = "https://sayangterrytulang.syd1.digitaloceanspaces.com/readtangerang.txt"
@@ -452,9 +451,8 @@ rule PHP_Bot_UA_Remote_Response
 {
     meta:
         description = "Detects PHP script responding to bots with remote content"
-        author = "OpenAI ChatGPT"
+        author = "TangerangKota-CSIRT"
         date = "2025-05-16"
-        tags = ["php", "bot-check", "remote-fetch", "malware", "webshell"]
     
     strings:
         $url1 = "https://opendatav2.tangerangkota.go.id/readme.txt"
