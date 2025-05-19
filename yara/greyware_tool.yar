@@ -39614,29 +39614,6 @@ rule rule_schtasks_greyware_tool_keyword
         any of them
 }
 
-
-rule rule_scp_greyware_tool_keyword
-{
-    meta:
-        description = "Detection patterns for the tool 'scp' taken from the ThreatHunting-Keywords github project"
-        author = "@mthcht"
-        reference = "https://github.com/mthcht/ThreatHunting-Keywords"
-        tool = "scp"
-        rule_category = "greyware_tool_keyword"
-
-    strings:
-        // Description: Detects the use of tools that copy files from or to remote systems
-        // Reference: https://attack.mitre.org/techniques/T1105/
-        $string1_scp_greyware_tool_keyword = /scp\s.{0,1000}\s.{0,1000}\@.{0,1000}\:/ nocase ascii wide
-        // Description: Detects the use of tools that copy files from or to remote systems
-        // Reference: https://attack.mitre.org/techniques/T1105/
-        $string2_scp_greyware_tool_keyword = /scp\s.{0,1000}\@.{0,1000}\:.{0,1000}\s/ nocase ascii wide
-
-    condition:
-        any of them
-}
-
-
 rule rule_ScreenConnect_greyware_tool_keyword
 {
     meta:
