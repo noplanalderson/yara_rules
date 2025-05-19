@@ -435,7 +435,12 @@ private rule phpInImage
         $jpeg = {FF D8 FF E0 ?? ?? 4A 46 49 46 } 
 
     condition:
-        (($gif at 0) or ($jfif at 0) or ($png at 0) or ($jpeg at 0)) and $php_tag
+        (
+            ($gif at 0 and $php_tag in (100..filesize)) or
+            ($jfif at 0 and $php_tag in (100..filesize)) or
+            ($png at 0 and $php_tag in (100..filesize)) or
+            ($jpeg at 0 and $php_tag in (100..filesize))
+        )
 }
 
 rule hiddenFunctionality
