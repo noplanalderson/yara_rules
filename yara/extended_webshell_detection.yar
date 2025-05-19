@@ -468,25 +468,25 @@ rule suspiciousFunctionality
         passwordProtection or hardcoded_urldecode or fopo or eval
 }
 
-rule obfuscatedFunctionality
-{
-    meta:
-        author = "NSA Cybersecurity"
-        description = "Obfuscation sometimes hides malicious functionality"
+//rule obfuscatedFunctionality
+//{
+//   meta:
+//        author = "NSA Cybersecurity"
+//        description = "Obfuscation sometimes hides malicious functionality"
+//
+//    condition:
+//        ObfuscatedPhp or chr_obfuscation or SuspiciousEncoding
+//}
 
-    condition:
-        ObfuscatedPhp or chr_obfuscation or SuspiciousEncoding
-}
-
-rule possibleIndicator
-{
-    meta:
-        author = "NSA Cybersecurity"
-        description = "Artifacts common to web shells and less common in benign files"
-
-    condition:
-        DodgyPhp or DangerousPhp or DodgyStrings
-}
+//rule possibleIndicator
+//{
+//    meta:
+//        author = "NSA Cybersecurity"
+//        description = "Artifacts common to web shells and less common in benign files"
+//
+//    condition:
+//        DodgyPhp or DangerousPhp or DodgyStrings
+//}
 
 
 private rule APT_Backdoor_MSIL_SUNBURST_1
