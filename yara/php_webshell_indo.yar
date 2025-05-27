@@ -153,3 +153,66 @@ rule EvilTwinWebShell
             1 of ($func1, $func2, $func3, $func4, $func5, $obf1, $obf2)
         )
 }
+
+
+rule HaxorWebshellv2
+{
+    meta:
+        description = "Detect Haxor Webshell Variant, including obfuscated file downloader."
+        author = "Mr. Naeem"
+        date = "2025-05-27"
+        version = "1.0"
+
+strings:
+        // PHP tags
+        $phptag1 = "<?php" ascii
+        $phptag2 = "<?" ascii
+        $phptag3 = "<script language=\"php\">" ascii
+
+        // Web interface strings
+        $title = "sysadmin access" ascii
+        $form = "method=\"POST\"" nocase ascii
+        $input = "type=\"password\"" ascii
+        $submit = "type=\"submit\"" ascii
+
+        // Function names
+        $func1 = "is_logged_in" ascii
+        $func2 = "hex2str" ascii
+        $func3 = "geturlsinfo" ascii
+        $func4 = "function_exists" ascii
+        $func5 = "curl_setopt" ascii
+        $func6 = "eval" ascii
+        $func7 = "password_verify" ascii
+        $func8 = "base64_decode" ascii
+
+        // Variables (contextualized)
+        $var1 = "$destiny" nocase ascii
+        $var2 = "$dream" nocase ascii
+        $var3 = "$_POST['password']" nocase ascii
+
+        // Obfuscated function names (hex-encoded)
+        $str1 = "73747265616d5f6765745f636f6e74656e7473" ascii // stream_get_contents
+        $str2 = "666f70656e" ascii // fopen
+        $str3 = "66696c655f6765745f636f6e74656e7473" ascii // file_get_contents
+        $str4 = "6375726c5f65786563" ascii // curl_exec
+
+        // Suspicious URL patterns
+        $url1 = /https?:\/\/[a-zA-Z0-9.-]+\.pages\.dev/ ascii
+        $url2 = /\.jpg/ ascii
+
+        // Additional webshell behavior
+        $cookie = "setcookie" ascii
+        $hex_pattern = /[0-9a-f]{8,}/ ascii // Generic hex strings
+
+    condition:
+        any of ($phptag*) and (
+            // High-confidence indicators: eval or curl with obfuscation
+            (2 of ($func6, $func5, $str4, $func8)) or
+            // Function-based detection
+            (4 of ($func1, $func2, $func3, $func4, $func5, $func6, $func7, $func8)) or
+            // Variable and obfuscation combo
+            (2 of ($var1, $var2, $var3) and 1 of ($str1, $str2, $str3, $str4, $hex_pattern)) or
+            // Web interface and obfuscation
+            (4 of ($title, $form, $input, $submit, $str1, $str2, $str3, $str4, $url1, $url2, $cookie))
+        )
+}
