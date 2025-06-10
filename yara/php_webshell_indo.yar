@@ -209,7 +209,8 @@ strings:
             // High-confidence indicators: eval or curl with obfuscation
             (2 of ($func6, $func5, $str4, $func8)) or
             // Function-based detection
-            (4 of ($func1, $func2, $func3, $func4, $func5, $func6, $func7, $func8)) or
+            (4 of ($func1, $func2, $func3, $func4, $func5, $func6, $func7, $func8))
+         ) and (
             // Variable and obfuscation combo
             (2 of ($var1, $var2, $var3) and 1 of ($str1, $str2, $str3, $str4, $hex_pattern)) or
             // Web interface and obfuscation
