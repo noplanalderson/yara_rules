@@ -13131,7 +13131,7 @@ rule rule_github_greyware_tool_keyword
         $string31_github_greyware_tool_keyword = /\/github\.com\/.{0,1000}\/raw\/main\/.{0,1000}\.jar/ nocase ascii wide
         // Description: Github raw access content - abused by malwares to retrieve payloads
         // Reference: https://github.com/
-        $string32_github_greyware_tool_keyword = /\/github\.com\/.{0,1000}\/raw\/main\/.{0,1000}\.js/ nocase ascii wide
+        // $string32_github_greyware_tool_keyword = /\/github\.com\/.{0,1000}\/raw\/main\/.{0,1000}\.js/ nocase ascii wide
         // Description: Github raw access content - abused by malwares to retrieve payloads
         // Reference: https://github.com/
         $string33_github_greyware_tool_keyword = /\/github\.com\/.{0,1000}\/raw\/main\/.{0,1000}\.lnk/ nocase ascii wide
@@ -13449,7 +13449,7 @@ rule rule_github_greyware_tool_keyword
         $string137_github_greyware_tool_keyword = /raw\.githubusercontent\.com.{0,1000}\.jar/ nocase ascii wide
         // Description: Github raw access content - abused by malwares to retrieve payloads
         // Reference: https://github.com/
-        $string138_github_greyware_tool_keyword = /raw\.githubusercontent\.com.{0,1000}\.js/ nocase ascii wide
+        // $string138_github_greyware_tool_keyword = /raw\.githubusercontent\.com.{0,1000}\.js/ nocase ascii wide
         // Description: Github raw access content - abused by malwares to retrieve payloads
         // Reference: https://github.com/
         $string139_github_greyware_tool_keyword = /raw\.githubusercontent\.com.{0,1000}\.lnk/ nocase ascii wide
