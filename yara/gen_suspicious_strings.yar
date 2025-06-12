@@ -82,7 +82,7 @@ rule ReconCommands_in_File : FILE {
       $ = "qprocess"
       $ = "nslookup"
    condition:
-      filesize < 5KB and 4 of them
+      filesize > 3KB and 4 of them
 }
 
 rule VBS_dropper_script_Dec17_1 {
