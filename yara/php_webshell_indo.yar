@@ -257,9 +257,9 @@ rule LitespeedShell
                 any of ($var*)
             ) or 
             (
-                (4 of ($func1, $func2, $func4, $func6, $func7, $func9, $func10, $func11, $func12, $func13, $func14)) or
-                $pattern or
-                any of ($var*) or
+                (4 of ($func1, $func2, $func4, $func6, $func7, $func9, $func10, $func11, $func12, $func13, $func14)) and
+                $pattern and
+                any of ($var*) and
                 any of ($str*)
             )
         ) or (
