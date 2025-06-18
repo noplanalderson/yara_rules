@@ -163,7 +163,7 @@ rule HaxorWebshellv2
         date = "2025-05-27"
         version = "1.0"
 
-strings:
+    strings:
         // PHP tags
         $phptag1 = "<?php" ascii
         $phptag2 = "<?" ascii
@@ -215,5 +215,54 @@ strings:
             (2 of ($var1, $var2, $var3) and 1 of ($str1, $str2, $str3, $str4, $hex_pattern)) or
             // Web interface and obfuscation
             (4 of ($title, $form, $input, $submit, $str1, $str2, $str3, $str4, $url1, $url2, $cookie))
+        )
+}
+
+rule LitespeedShell 
+{
+    meta:
+        description = "Goodbye Litespeed WebShell"
+        author = "Mr. Naeem"
+        date = "2025-06-18"
+        version = "1.0"
+    
+    strings:
+        $func1 = "base64_encode" ascii
+        $func2 = "base64_decode" ascii
+        $func3 = "proc_open" ascii
+        $func4 = "move_uploaded_file" ascii
+        $func5 = "stream_get_contents" ascii
+        $func6 = "file_get_contents" ascii
+        $func7 = "deleteDirectory" ascii
+        $func8 = "proc_close" ascii
+        $func9 = "realpath" ascii
+        $func10 = "stat" ascii
+        $func11 = "is_writable" ascii
+        $func12 = "is_resource" ascii
+        $func13 = "file_exists" ascii
+        $func14 = "file_put_contents" ascii
+        $str1 = "cmd_input" nocase ascii
+        $str2 = "view_file" nocase ascii
+        $var1 = "$descriptorspec" nocase ascii
+        $var2 = "$pipes" nocase ascii
+        $var3 = "$command" nocase ascii
+        $var4 = "$process" nocase ascii
+        $var5 = /(\$file|\$path|\$filename|\$target)/ nocase ascii
+        $pattern = /move_uploaded_file\s*\(\s*\$_FILES\[[^\]]+\]\["tmp_name"\]\s*,\s*\$[a-zA-Z0-9_]+\s*\)/
+
+    condition:
+        (
+            (
+                all of ($func3, $func5, $func8, $func11) and 
+                any of ($var*)
+            ) or 
+            (
+                (4 of ($func1, $func2, $func4, $func6, $func7, $func9, $func10, $func11, $func12, $func13, $func14)) or
+                $pattern or
+                any of ($var*) or
+                any of ($str*)
+            )
+        ) or (
+            any of ($func*) and $pattern
         )
 }
