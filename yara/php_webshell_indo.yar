@@ -266,3 +266,42 @@ rule LitespeedShell
             any of ($func*) and $pattern
         )
 }
+
+rule FilesMan
+{
+    meta:
+        description = "FilesMan WebShell"
+        author = "Mr. Naeem"
+        date = "2025-07-01"
+        version = "1.0"
+
+    strings:
+        $php = "<?php" ascii
+        $func1 = "session_start" nocase ascii
+        $func2 = "set_time_limit" nocase ascii
+        $func3 = "ini_set" nocase ascii
+        $func4 = "clearstatcache" nocase ascii
+        $func5 = "set_time_limit(0)" nocase ascii
+        $sigFunc1 = "login_shell" nocase ascii
+        $sigFunc2 = "suggest_exploit" nocase ascii
+        $sigFunc3 = "unx()" nocase ascii
+        $sigFunc4 = "s()" nocase ascii
+        $sigFunc5 = "cmd" nocase ascii
+        $sigFunc6 = "unlinkDir" nocase ascii
+        $sigFunc7 = "remove_dot" nocase ascii
+        $var1 = "$GLOBALS" ascii
+        $var2 = "$gzdcjjppeft" ascii
+        $var3 = "$iqxsvenssxc" ascii
+        $var4 = "$klpelcka" ascii
+        $str1 = "pwnki" ascii
+        $str2 = "name=\"pass\"" ascii
+
+    condition:
+        $php and (
+            any of ($func*) and 
+            any of ($sigFunc*) and
+            any of ($var*) and
+            any of ($str*)
+        )
+
+}
