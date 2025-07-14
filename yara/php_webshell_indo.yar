@@ -305,3 +305,63 @@ rule FilesMan
         )
 
 }
+
+rule SEOCloakingShell
+{
+    meta:
+        description = "SEO Cloaking WebShell"
+        author = "Mr. Naeem"
+        date = "2025-07-14"
+        version = "1.0"
+    
+    strings:
+        $ua_check1 = "Googlebot" ascii
+        $ua_check2 = "Google-Site-Verification" ascii
+        $ua_check3 = "Google-InspectionTool" ascii
+        $ua_check4 = "Googlebot-Mobile" ascii
+        $ua_check5 = "Googlebot-News" ascii
+        $ua_code  = "strpos($_SERVER['HTTP_USER_AGENT']" ascii
+        $lang_code = "$_SERVER['HTTP_ACCEPT_LANGUAGE']" ascii
+        $redir_code = "header(\"Location: https://" ascii
+        $file_get  = "file_get_contents(" ascii
+        $include   = "include(" ascii
+
+    condition:
+        3 of ($ua_check*) and
+        $ua_code and
+        $file_get and
+        $include00 and
+        $lang_code and
+        $redir_code
+}
+
+rule 403Webshell
+{
+    meta:
+        description = "SEO Cloaking WebShell"
+        author = "Mr. Naeem"
+        date = "2025-07-14"
+        version = "1.0"
+    
+    strings:
+        $conf1 = "$CONFIG" nocase ascii
+        $conf2 = "$use_auth" nocase ascii
+        $conf3 = "$auth_users" nocase ascii
+        $conf4 = "$ip_ruleset" nocase ascii
+        $conf5 = "$ip_silent" nocase ascii
+        $conf6 = "$ip_whitelist" nocase ascii
+        $conf7 = "$ip_blacklist" nocase ascii
+        $func1 = "set_time_limit(" nocase ascii
+        $func2 = "getClientIP(" nocase ascii
+        $func3 = "FM_Zipper" nocase ascii
+        $func4 = "FM_Config" nocase ascii
+        $func5 = "curl_init(" nocase ascii
+        $upload = "move_uploaded_file(" nocase ascii
+        $script = "<script src=" ascii
+        $session = "FM_SESSION_ID" ascii
+
+    condition:
+        3 of ($conf*) and 
+        2 of ($func*) and
+        $script and $session and $upload
+}
