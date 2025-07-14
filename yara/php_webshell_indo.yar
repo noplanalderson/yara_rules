@@ -330,7 +330,7 @@ rule SEOCloakingShell
         3 of ($ua_check*) and
         $ua_code and
         $file_get and
-        $include00 and
+        $include and
         $lang_code and
         $redir_code
 }
