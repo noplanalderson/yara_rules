@@ -365,3 +365,76 @@ rule Webshell_403
         2 of ($func*) and
         $script and $session and $upload
 }
+
+rule GamblingPage
+{
+    meta:
+        description = "Online Gambling Page"
+        author = "Mr. Naeem"
+        date = "2025-07-14"
+        version = "1.0"
+
+    strings:
+        $html = "<html" nocase ascii
+        $meta = "<meta name=\"google-site-verification\"" ascii
+        $ampTag = "<link rel=\"amphtml\"" ascii
+        $str1 = "shopify" nocase ascii
+        $str2 = "belanja" nocase ascii
+        $str3 = "keranjang" nocase ascii
+        $str4 = "rating" nocas ascii
+        $url1 = "https://www.k24klik.com" ascii
+        $url2 = "https://res.cloudinary.com" ascii
+        $url3 = "https://twitter.com" ascii
+        $url4 = "https://facebook.com" ascii 
+
+    condition:
+        $html and $meta and $ampTag
+        and (all of ($str*) or 1 of ($url*))
+
+}
+
+rule alfaWebShellTools
+{
+    meta:
+        description = "Alfa Webshell Tools"
+        author = "Mr. Naeem"
+        date = "2025-07-14"
+        version = "1.0"
+    
+    strings:
+        $var1 = "USEFUL" ascii
+        $var2 = "DOWNLOADERS" ascii
+        $var3 = "VAR_NAMED" ascii
+        $var4 = "VIRTUAL_DOMAINS" ascii
+        $str1 = "/etc/virtual/domainowners" ascii
+        $str2 = "/etc/named.conf" ascii
+        $func1= "awk" ascii
+        $func2= "uname" ascii
+        $func3= "stat" ascii
+
+    condition:
+        all of ($var*) and all of ($str*) and all of ($func*)
+}
+
+rule alfaWebShellTools_in_C
+{
+    meta:
+        description = "Alfa Webshell Tools"
+        author = "Mr. Naeem"
+        date = "2025-07-14"
+        version = "1.0"
+    
+    strings:
+        $include = "#include" ascii
+        $var1 = "sockaddr_in" ascii
+        $var2 = "server_addr" ascii
+        $var3 = "sock" ascii
+        $var4 = "server_ip" ascii
+        $func1= "connectToServer" ascii
+        $func2= "connect" ascii
+        $func3= "execl" ascii
+        $func4= "socket" ascii
+
+    condition:
+        $include and 2 of ($var*) and 2 of ($func*)
+}
