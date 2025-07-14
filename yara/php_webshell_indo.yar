@@ -381,7 +381,7 @@ rule GamblingPage
         $str1 = "shopify" nocase ascii
         $str2 = "belanja" nocase ascii
         $str3 = "keranjang" nocase ascii
-        $str4 = "rating" nocas ascii
+        $str4 = "rating" nocase ascii
         $url1 = "https://www.k24klik.com" ascii
         $url2 = "https://res.cloudinary.com" ascii
         $url3 = "https://twitter.com" ascii
