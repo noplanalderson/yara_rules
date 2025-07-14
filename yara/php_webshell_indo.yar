@@ -335,7 +335,7 @@ rule SEOCloakingShell
         $redir_code
 }
 
-rule 403Webshell
+rule Webshell_403
 {
     meta:
         description = "SEO Cloaking WebShell"
