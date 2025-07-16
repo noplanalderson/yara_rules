@@ -430,7 +430,6 @@ rule alfaWebShellTools_in_C
         $var2 = "server_addr" ascii
         $var3 = "sock" ascii
         $var4 = "server_ip" ascii
-        $var4 = "server_ip" ascii
         $func1= "connectToServer" ascii
         $func2= "connect" ascii
         $func3= "execl" ascii
