@@ -438,3 +438,23 @@ rule alfaWebShellTools_in_C
     condition:
         $include and any of ($var*) and any of ($func*)
 }
+
+rule simplePHPUpload {
+    
+    meta:
+        description = "Simple PHP Upload"
+        author = "Mr. Naeem"
+        date = "2025-07-29"
+        version = "1.0"
+
+    strings:
+        $php = "<?php" ascii
+        $formUpload = "enctype=multipart/form-data" ascii
+        $pattern1 = /copy\s*\(\s*\$_FILES\s*\[\s*['"]?\w+['"]?\]\s*\[\s*['"]?tmp_name['"]?\]\s*,\s*\$_FILES\s*\[\s*['"]?\w+['"]?\]\s*\[\s*['"]?name['"]?\]\s*\)/
+        $pattern2 = /move_uploaded_file\s*\(\s*\$_FILES\[[^\]]+\]\["tmp_name"\]\s*,\s*\$[a-zA-Z0-9_]+\s*\)/
+        $str1 = "sukses" nocase ascii
+        $str2 = "gagal" nocase ascii
+
+    condition:
+        $php and $formUpload and 1 of ($pattern*) and all of ($str*)
+}
