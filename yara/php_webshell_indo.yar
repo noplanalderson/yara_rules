@@ -681,7 +681,6 @@ rule PHP_Multi_Method_Remote_Loader
         $download2 = "downloadWithCurl" nocase  
         $download3 = "downloadWithFopen" nocase
         
-        $fallback1 = /if\s*\(\s*\$\w+\s*===\s*false\s*\)/
         $eval_pattern = /eval\s*\(\s*['"]>\?['"][\s]*\.[\s]*\$\w+/
         
         $ini_get = "ini_get(" nocase
@@ -693,9 +692,6 @@ rule PHP_Multi_Method_Remote_Loader
         
         // Must have at least 2 download methods
         2 of ($download*) and
-        
-        // Must have fallback logic
-        #fallback1 >= 2 and
         
         // Must have eval execution
         $eval_pattern and
@@ -844,31 +840,11 @@ rule PHP_Remote_Backdoor_Eval_Auth_Bypass_v2
         // Login form for phishing password
         $login_form = /<form[^>]+method\s*=\s*["']POST["'][^>]*>.*["']password["'].*<\/form>/s
 
-        // Optional visual lure (ASCII art often used in deface/backdoor)
-        // $ascii_pattern = "⣴⣾⣿⣿⣶⡄"
-
-    //condition:
-    //    filesize < 80KB and
-    //    (
-    //        all of ($auth_cookie, $md5_auth, $eval_injection, $remote_url) and
-    //        1 of ($curl_pattern, $ua_pattern) and
-     //       $login_form
-    //    ) and
-        // Avoid false positive from known frameworks
-    //    not (
-    //        "wp-content" in filename or
-    //        "laravel" in filename or
-    //        "symfony" in filename or
-    //        "drupal" in filename
-    //    )
-
-        condition:
+    condition:
         filesize < 80KB and
         (
             all of ($auth_cookie, $md5_auth, $eval_injection, $remote_url) and
             1 of ($curl_pattern, $ua_pattern) and
             $login_form
-        ) 
-        // and
-        // any of ($fp_laravel, $fp_symfony, $fp_drupal)
+        )
 }
