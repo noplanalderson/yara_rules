@@ -477,7 +477,7 @@ rule PHP_Backdoor_Eval_Remote_Code_Execution
         $b64_pastebin = "aHR0cHM6Ly9wYXN0ZWJpbi5jb20v"
         $b64_raw_content = "cmF3LmdpdGh1YnVzZXJjb250ZW50"
         
-        $suspicious_var1 = /\$[a-zA-Z_][a-zA-Z0-9_]{1,20}\s*=\s*['"][?]>['"];/  
+        $suspicious_var1 = /\$[a-zA-Z_]{1,20}[a-zA-Z0-9_]{0,20}\s*=\s*.{1,100};/  
         $suspicious_var2 = /\$[a-zA-Z_][a-zA-Z0-9_]{1,20}\s*=\s*['"]<[?]php['"];/  
 
         $curl_function = /function\s+get\s*\(\s*\$url\s*\)\s*\{.{1,500}curl_init.{1,300}CURLOPT_URL.{1,300}curl_exec.{1,300}\}/s
@@ -554,7 +554,7 @@ rule PHP_Suspicious_Curl_Remote_Execution
         $remote_url3 = /pastebin\.com\/raw/
 
         $dynamic_call = /call_user_func\s*\(\s*\$[a-zA-Z_]{1,20}/
-        $variable_func = /\$[a-zA-Z_][a-zA-Z0-9_]{0,20}\s*\([^)]{0,100}\$[a-zA-Z_]{1,20}/
+        $variable_func = /\$[a-zA-Z_][a-zA-Z0-9_]{0,20}\s*\(/
 
     condition:
         (uint32(0) == 0x3c3f7068 or uint16(0) == 0x3c3f) and
@@ -786,7 +786,8 @@ rule PHP_Obfuscated_Function_Names
         $obf_allow = /'a'[\s]*\.[\s]*'llow'[\s]*\.[\s]*'_ur'[\s]*\.[\s]*'l_fo'[\s]*\.[\s]*'pe'[\s]*\.[\s]*'n'/
         
         // Generic obfuscation patterns
-        $concat_pattern1 = /['"][a-z]?['"][\s]*\.[\s]*['"][a-z]+['"][\s]*\.[\s]*['"][a-z_]+['"]/
+        // $concat_pattern1 = /['"][a-z]?['"][\s]*\.[\s]*['"][a-z]+['"][\s]*\.[\s]*['"][a-z_]+['"]/
+        $concat_pattern1 = /['"]\s*\.\s*['"]/
         $concat_pattern2 = /function_exists\s*\(\s*['"][a-z]?['"][\s]*\.[\s]*['"][a-z]+['"]/
         $concat_pattern3 = /ini_get\s*\(\s*['"][a-z]?['"][\s]*\.[\s]*['"][a-z_]+['"]/
         
