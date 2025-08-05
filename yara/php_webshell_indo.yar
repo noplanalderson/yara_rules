@@ -875,18 +875,27 @@ rule PHP_Remote_Backdoor_Eval_Auth_Bypass_v2
         // Optional visual lure (ASCII art often used in deface/backdoor)
         $ascii_pattern = "⣴⣾⣿⣿⣶⡄"
 
-    condition:
+    //condition:
+    //    filesize < 80KB and
+    //    (
+    //        all of ($auth_cookie, $md5_auth, $eval_injection, $remote_url) and
+    //        1 of ($curl_pattern, $ua_pattern) and
+     //       $login_form
+    //    ) and
+        // Avoid false positive from known frameworks
+    //    not (
+    //        "wp-content" in filename or
+    //        "laravel" in filename or
+    //        "symfony" in filename or
+    //        "drupal" in filename
+    //    )
+
+        condition:
         filesize < 80KB and
         (
             all of ($auth_cookie, $md5_auth, $eval_injection, $remote_url) and
             1 of ($curl_pattern, $ua_pattern) and
             $login_form
         ) and
-        // Avoid false positive from known frameworks
-        not (
-            "wp-content" in filename or
-            "laravel" in filename or
-            "symfony" in filename or
-            "drupal" in filename
-        )
+        none of ($fp_wp, $fp_laravel, $fp_symfony, $fp_drupal)
 }
