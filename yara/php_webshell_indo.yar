@@ -665,3 +665,180 @@ rule PHP_Anti_False_Positive_Whitelist
         $test_file or
         $legitimate_eval1 or $legitimate_eval2
 }
+
+rule PHP_Hexencoded_Remote_Loader
+{
+    meta:
+        description = "Detects PHP webshell using hex-encoded URLs for remote code loading"
+        author = "TangerangKota-CSIRT"
+        date = "2025-08-05"
+        severity = "critical"
+        category = "webshell"
+        reference = "Hex-encoded remote PHP script loader with multiple download methods"
+        
+    strings:
+        // Hex-encoded URL patterns (common GitHub raw URLs)
+        $hex_github1 = "68747470733a2f2f7261772e676974687562" // https://raw.github
+        $hex_github2 = "68747470733a2f2f7261772e6769746875622e636f6d" // https://raw.github.com
+        $hex_https = "68747470733a2f2f" // https://
+        
+        // Hex to string conversion function
+        $hex2str_func = /function\s+hex2str\s*\(\s*\$\w+\s*\)/
+        $hexdec_usage = "hexdec(" nocase
+        $chr_hexdec = /chr\s*\(\s*hexdec\s*\(/
+        
+        // Multiple download methods
+        $file_get_contents = "file_get_contents(" nocase
+        $curl_download = /function\s+downloadWithCurl/
+        $fopen_download = /function\s+downloadWithFopen/
+        $allow_url_fopen = "'allow' . '_ur' . 'l_fo' . 'pe' . 'n'" 
+        
+        // Obfuscated function names
+        $obfuscated_curl = "'c' . 'u' . 'rl' . '_i' . 'n' . 'i' . 't'"
+        $obfuscated_allow = /['"]a['"][\s]*\.[\s]*['"]llow['"][\s]*\.[\s]*['"]_ur['"][\s]*\.[\s]*['"]l_fo['"][\s]*\.[\s]*['"]pe['"][\s]*\.[\s]*['"]n['"]/
+        
+        // Execution patterns
+        $eval_phpscript = /eval\s*\(\s*['"]>\?['"][\s]*\.[\s]*\$\w+\s*\)/
+        $die_message = "Gagal mendownload script PHP"
+        
+    condition:
+        uint16(0) == 0x3c3f and // PHP file
+        filesize < 50KB and
+        
+        // Must have hex-to-string conversion
+        $hex2str_func and
+        $hexdec_usage and
+        $chr_hexdec and
+        
+        // Must have hex-encoded URL
+        (
+            $hex_github1 or
+            $hex_github2 or
+            ($hex_https and #hex_https >= 1)
+        ) and
+        
+        // Must have multiple download methods
+        $file_get_contents and
+        (
+            $curl_download or
+            $fopen_download
+        ) and
+        
+        // Must have eval execution
+        $eval_phpscript and
+        
+        // Obfuscation indicators
+        (
+            $obfuscated_curl or
+            $obfuscated_allow or
+            $allow_url_fopen
+        )
+}
+
+rule PHP_Multi_Method_Remote_Loader
+{
+    meta:
+        description = "Detects PHP scripts with multiple remote loading methods and fallbacks"
+        author = "TangerangKota-CSIRT"
+        date = "2025-08-05"
+        severity = "high"
+        category = "webshell"
+        
+    strings:
+        $download1 = "downloadWithFileGetContents" nocase
+        $download2 = "downloadWithCurl" nocase  
+        $download3 = "downloadWithFopen" nocase
+        
+        $fallback1 = /if\s*\(\s*\$\w+\s*===\s*false\s*\)/
+        $eval_pattern = /eval\s*\(\s*['"]>\?['"][\s]*\.[\s]*\$\w+/
+        
+        $ini_get = "ini_get(" nocase
+        $function_exists = "function_exists(" nocase
+        
+    condition:
+        uint16(0) == 0x3c3f and // PHP file
+        filesize < 100KB and
+        
+        // Must have at least 2 download methods
+        2 of ($download*) and
+        
+        // Must have fallback logic
+        #fallback1 >= 2 and
+        
+        // Must have eval execution
+        $eval_pattern and
+        
+        // Must check for PHP capabilities
+        $ini_get and
+        $function_exists
+}
+
+rule Hex_Encoded_GitHub_Raw_Access
+{
+    meta:
+        description = "Detects hex-encoded GitHub raw content URLs in PHP scripts"
+        author = "TangerangKota-CSIRT"
+        date = "2025-08-05"
+        severity = "medium"
+        category = "suspicious"
+        
+    strings:
+        // Specific hex patterns for GitHub raw URLs
+        $hex_raw_github = "68747470733a2f2f7261772e676974687562" // https://raw.github
+        $hex_githubusercontent = "68747470733a2f2f7261772e6769746875622e636f6d" // https://raw.github.com
+        
+        // ALFA webshell specific hex
+        $hex_alfa_url = "68747470733a2f2f7261772e6769746875622e636f6d2f43616c6c4d654261746f7361792f414c46415f313333372f6d61696e2f616c66612e706870"
+        
+        // Hex conversion functions
+        $hex_to_str = /function\s+\w*hex\w*str\w*\s*\(/
+        $str_conversion = /for\s*\([^}]*hexdec[^}]*chr\s*\(/
+        
+    condition:
+        uint16(0) == 0x3c3f and // PHP file
+        
+        (
+            // Specific ALFA webshell hex
+            $hex_alfa_url or
+            
+            // Generic GitHub raw hex patterns
+            (
+                ($hex_raw_github or $hex_githubusercontent) and
+                ($hex_to_str or $str_conversion)
+            )
+        )
+}
+
+rule PHP_Obfuscated_Function_Names
+{
+    meta:
+        description = "Detects PHP scripts using string concatenation to obfuscate function names"
+        author = "TangerangKota-CSIRT"
+        date = "2025-08-05"
+        severity = "medium"
+        category = "obfuscation"
+        
+    strings:
+        // Obfuscated curl_init
+        $obf_curl = /'c'[\s]*\.[\s]*'u'[\s]*\.[\s]*'rl'[\s]*\.[\s]*'_i'[\s]*\.[\s]*'n'[\s]*\.[\s]*'i'[\s]*\.[\s]*'t'/
+        
+        // Obfuscated allow_url_fopen
+        $obf_allow = /'a'[\s]*\.[\s]*'llow'[\s]*\.[\s]*'_ur'[\s]*\.[\s]*'l_fo'[\s]*\.[\s]*'pe'[\s]*\.[\s]*'n'/
+        
+        // Generic obfuscation patterns
+        $concat_pattern1 = /['"][a-z]?['"][\s]*\.[\s]*['"][a-z]+['"][\s]*\.[\s]*['"][a-z_]+['"]/
+        $concat_pattern2 = /function_exists\s*\(\s*['"][a-z]?['"][\s]*\.[\s]*['"][a-z]+['"]/
+        $concat_pattern3 = /ini_get\s*\(\s*['"][a-z]?['"][\s]*\.[\s]*['"][a-z_]+['"]/
+        
+    condition:
+        uint16(0) == 0x3c3f and // PHP file
+        
+        (
+            // Specific obfuscated functions
+            $obf_curl or
+            $obf_allow or
+            
+            // Generic concatenation patterns
+            2 of ($concat_pattern*)
+        )
+}
