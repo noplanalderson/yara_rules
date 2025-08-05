@@ -786,8 +786,8 @@ rule PHP_Obfuscated_Function_Names
         $obf_allow = /'a'[\s]*\.[\s]*'llow'[\s]*\.[\s]*'_ur'[\s]*\.[\s]*'l_fo'[\s]*\.[\s]*'pe'[\s]*\.[\s]*'n'/
         
         // Generic obfuscation patterns
-        // $concat_pattern1 = /['"][a-z]?['"][\s]*\.[\s]*['"][a-z]+['"][\s]*\.[\s]*['"][a-z_]+['"]/
-        $concat_pattern1 = /['"]\s*\.\s*['"]/
+        $concat_pattern1 = /['"][a-z]?['"][\s]*\.[\s]*['"][a-z]+['"][\s]*\.[\s]*['"][a-z_]+['"]/
+        // $concat_pattern1 = /['"]\s*\.\s*['"]/
         $concat_pattern2 = /function_exists\s*\(\s*['"][a-z]?['"][\s]*\.[\s]*['"][a-z]+['"]/
         $concat_pattern3 = /ini_get\s*\(\s*['"][a-z]?['"][\s]*\.[\s]*['"][a-z_]+['"]/
         
