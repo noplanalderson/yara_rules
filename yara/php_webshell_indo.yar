@@ -659,7 +659,7 @@ rule PHP_Hexencoded_Remote_Loader
         
         // Execution patterns
         $eval_phpscript = /eval\s*\(\s*['"]>\?['"][\s]*\.[\s]*\$\w+\s*\)/
-        $die_message = "Gagal mendownload script PHP"
+        // $die_message = "Gagal mendownload script PHP"
         
     condition:
         uint16(0) == 0x3c3f and // PHP file
