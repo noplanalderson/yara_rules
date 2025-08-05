@@ -848,3 +848,25 @@ rule PHP_Remote_Backdoor_Eval_Auth_Bypass_v2
             $login_form
         )
 }
+
+rule Fake_Gmaps_Webshell
+{
+    meta:
+        description = "Detects Fake Gmaps Webshell"
+        author = "TangerangKota-CSIRT"
+        date = "2025-08-05"
+        severity = "critical"
+        tags = "php backdoor eval remote curl hex"
+
+    strings:
+        $php = "<?php" nocase
+        $func1 = "hex2str" nocase
+        $func2 = "file_get_contents" nocase
+        $func3 = "function_exists" nocase
+        $func4 = "fopen" nocase
+        $func5 = "eval" nocase
+        $func6 = "hexdec" nocase
+
+    condition:
+        $php and all of ($func*)
+}
