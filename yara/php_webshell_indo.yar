@@ -598,34 +598,6 @@ rule PHP_Backdoor_WordPress_Config_Infection
         )
 }
 
-rule PHP_Anti_False_Positive_Whitelist
-{
-    meta:
-        description = "Whitelist rule to prevent false positives on legitimate code"
-        author = "TangerangKota-CSIRT"
-        date = "2025-08-05"
-        severity = "info"
-        category = "whitelist"
-
-    strings:
-        $laravel = "Illuminate\\"
-        $symfony = "Symfony\\"
-        $wordpress_core = "wp-includes/version.php"
-        $drupal_core = "core/lib/Drupal"
-
-        $legitimate_eval1 = /eval\s*\(\s*['"][^'"]{1,100}return[^'"]{1,100}['"]/
-        $legitimate_eval2 = /eval\s*\(\s*\$[a-zA-Z_]{1,20}\s*\.\s*['"]\s*;\s*['"]/
-
-        $phpunit = "PHPUnit"
-        $composer = "composer"
-        $test_file = /test.{0,100}\.php$/
-
-    condition:
-        any of ($laravel, $symfony, $wordpress_core, $drupal_core, $phpunit, $composer) or
-        $test_file or
-        $legitimate_eval1 or $legitimate_eval2
-}
-
 rule PHP_Hexencoded_Remote_Loader
 {
     meta:
