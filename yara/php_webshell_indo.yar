@@ -845,7 +845,7 @@ rule PHP_Remote_Backdoor_Eval_Auth_Bypass_v2
         $login_form = /<form[^>]+method\s*=\s*["']POST["'][^>]*>.*["']password["'].*<\/form>/s
 
         // Optional visual lure (ASCII art often used in deface/backdoor)
-        $ascii_pattern = "⣴⣾⣿⣿⣶⡄"
+        // $ascii_pattern = "⣴⣾⣿⣿⣶⡄"
 
     //condition:
     //    filesize < 80KB and
@@ -868,6 +868,7 @@ rule PHP_Remote_Backdoor_Eval_Auth_Bypass_v2
             all of ($auth_cookie, $md5_auth, $eval_injection, $remote_url) and
             1 of ($curl_pattern, $ua_pattern) and
             $login_form
-        ) and
-        any of ($fp_wp, $fp_laravel, $fp_symfony, $fp_drupal)
+        ) 
+        // and
+        // any of ($fp_laravel, $fp_symfony, $fp_drupal)
 }
