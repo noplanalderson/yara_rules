@@ -775,3 +775,90 @@ rule PHP_Obfuscated_Function_Names
             2 of ($concat_pattern*)
         )
 }
+
+rule PHP_Backdoor_Remote_Eval_Login_Bypass
+{
+    meta:
+        description = "Detects PHP backdoor with remote eval and fake login using MD5-hashed password"
+        author = "TangerangKota-CSIRT"
+        date = "2025-08-05"
+        severity = "high"
+        reference = "https://raw.githubusercontent.com/GanestSeven/backdoor-mini/main/aw.txt"
+
+    strings:
+        // Auth bypass via cookie
+        $cookie_check = /\$_COOKIE\s*\[\s*['"]user_id['"]\s*\]\s*===\s*['"][a-zA-Z0-9]+['"]/
+
+        // MD5 hashed check
+        $md5_check = /md5\s*\(\s*\$_POST\s*\[\s*['"]password['"]\s*\]\s*\)\s*===\s*['"][a-fA-F0-9]{32}['"]/
+
+        // Remote code
+        $curl_exec = "curl_exec"
+        $file_get_contents = "file_get_contents"
+        $stream_get_contents = "stream_get_contents"
+
+        // Remote URL (GitHub raw or any HTTP)
+        $remote_url = /https?:\/\/[^\"']{1,80}/
+
+        // Eval injection
+        $eval_payload = /eval\s*\(\s*['"]\?>['"]\s*\.\s*\$[a-zA-Z_][a-zA-Z0-9_]*\s*\)/
+
+        // Fake login form
+        $login_form = /<form\s+method\s*=\s*["']POST["'].*<input\s+type\s*=\s*["']password["'].*<\/form>/s
+
+    condition:
+        filesize < 100KB and
+        1 of ($cookie_check, $md5_check) and
+        1 of ($curl_exec, $file_get_contents, $stream_get_contents) and
+        $eval_payload and
+        $login_form
+}
+
+rule PHP_Remote_Backdoor_Eval_Auth_Bypass_v2
+{
+    meta:
+        description = "Detects PHP backdoor with remote eval, auth bypass via cookie, and MD5-hashed fake login"
+        author = "TangerangKota-CSIRT"
+        date = "2025-08-05"
+        severity = "critical"
+        reference = "https://raw.githubusercontent.com/GanestSeven/backdoor-mini/main/aw.txt"
+        tags = "php backdoor eval remote curl login md5"
+
+    strings:
+        // Hardcoded authentication via cookie
+        $auth_cookie = /\$_COOKIE\s*\[\s*['"]user_id['"]\s*\]\s*===\s*['"][a-zA-Z0-9_]+['"]/
+
+        // Fake login password check with MD5
+        $md5_auth = /md5\s*\(\s*\$_POST\s*\[\s*['"]password['"]\s*\]\s*\)\s*===\s*['"][a-fA-F0-9]{32}['"]/
+
+        // Use of eval() on fetched content with prepended PHP closing tag
+        $eval_injection = /eval\s*\(\s*['"]\?>['"]\s*\.\s*\$[a-zA-Z_][a-zA-Z0-9_]*\s*\)/
+
+        // Remote URL used for fetching PHP content (GitHub, raw, etc.)
+        $remote_url = /https?:\/\/raw\.githubusercontent\.com\/[a-zA-Z0-9\/._-]+\.txt/
+
+        // Typical curl usage pattern in backdoors
+        $curl_pattern = "curl_setopt($conn, CURLOPT_RETURNTRANSFER, 1);"
+        $ua_pattern = "Mozilla/5.0 (Windows NT 6.1; rv:32.0) Gecko/20100101 Firefox/32.0"
+
+        // Login form for phishing password
+        $login_form = /<form[^>]+method\s*=\s*["']POST["'][^>]*>.*["']password["'].*<\/form>/s
+
+        // Optional visual lure (ASCII art often used in deface/backdoor)
+        $ascii_pattern = "⣴⣾⣿⣿⣶⡄"
+
+    condition:
+        filesize < 80KB and
+        (
+            all of ($auth_cookie, $md5_auth, $eval_injection, $remote_url) and
+            1 of ($curl_pattern, $ua_pattern) and
+            $login_form
+        ) and
+        // Avoid false positive from known frameworks
+        not (
+            "wp-content" in filename or
+            "laravel" in filename or
+            "symfony" in filename or
+            "drupal" in filename
+        )
+}
