@@ -809,7 +809,7 @@ rule PHP_Backdoor_Remote_Eval_Login_Bypass
     condition:
         filesize < 100KB and
         1 of ($cookie_check, $md5_check) and
-        1 of ($curl_exec, $file_get_contents, $stream_get_contents) and
+        1 of ($curl_exec, $file_get_contents, $stream_get_contents, $remote_url) and
         $eval_payload and
         $login_form
 }
@@ -869,5 +869,5 @@ rule PHP_Remote_Backdoor_Eval_Auth_Bypass_v2
             1 of ($curl_pattern, $ua_pattern) and
             $login_form
         ) and
-        none of ($fp_wp, $fp_laravel, $fp_symfony, $fp_drupal)
+        any of ($fp_wp, $fp_laravel, $fp_symfony, $fp_drupal)
 }
