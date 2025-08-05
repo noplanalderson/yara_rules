@@ -468,47 +468,34 @@ rule PHP_Backdoor_Eval_Remote_Code_Execution
         severity = "critical"
         category = "backdoor"
         reference = "Custom analysis"
-        
+
     strings:
-        // Main malicious pattern - eval with concatenated remote content
         $eval_pattern1 = /eval\s*\(\s*\$[a-zA-Z_][a-zA-Z0-9_]*\s*\.\s*get\s*\(/
-        $eval_pattern2 = /eval\s*\(\s*['"][^'"]*['"]\s*\.\s*get\s*\(/
+        $eval_pattern2 = /eval\s*\(\s*['"][^'"]{1,100}['"]\s*\.\s*get\s*\(/
         
-        // Base64 encoded suspicious URLs
         $b64_github_raw = "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL"
         $b64_pastebin = "aHR0cHM6Ly9wYXN0ZWJpbi5jb20v"
         $b64_raw_content = "cmF3LmdpdGh1YnVzZXJjb250ZW50"
         
-        // Suspicious variable patterns
-        $suspicious_var1 = /\$[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*['"][?]>['"];/
-        $suspicious_var2 = /\$[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*['"]<[?]php['"];/
-        
-        // Function definitions that fetch remote content
-        $curl_function = /function\s+get\s*\(\s*\$url\s*\)\s*\{[^}]*curl_init[^}]*CURLOPT_URL[^}]*curl_exec[^}]*\}/s
-        
-        // Obfuscated eval patterns
-        $obfuscated_eval1 = /\$[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*['"]eval['"];.*\$[a-zA-Z_][a-zA-Z0-9_]*\s*\(/
-        $obfuscated_eval2 = /call_user_func\s*\(\s*['"]eval['"],/
-        
+        $suspicious_var1 = /\$[a-zA-Z_][a-zA-Z0-9_]{1,20}\s*=\s*['"][?]>['"];/  
+        $suspicious_var2 = /\$[a-zA-Z_][a-zA-Z0-9_]{1,20}\s*=\s*['"]<[?]php['"];/  
+
+        $curl_function = /function\s+get\s*\(\s*\$url\s*\)\s*\{.{1,500}curl_init.{1,300}CURLOPT_URL.{1,300}curl_exec.{1,300}\}/s
+
+        $obfuscated_eval1 = /\$[a-zA-Z_][a-zA-Z0-9_]{1,20}\s*=\s*['"]eval['"]\s*;.{1,100}\$[a-zA-Z_][a-zA-Z0-9_]{1,20}\s*\(/
+        $obfuscated_eval2 = /call_user_func\s*\(\s*['"]eval['"]\s*,/
+
     condition:
-        // File must be PHP
-        (uint32(0) == 0x3c3f7068 or // "<?ph"
-         uint16(0) == 0x3c3f) and   // "<?"
-         
-        // Primary detection: eval rce
+        (uint32(0) == 0x3c3f7068 or uint16(0) == 0x3c3f) and
         (
             ($eval_pattern1 or $eval_pattern2) and
             ($b64_github_raw or $b64_pastebin or $b64_raw_content) and
             $curl_function
         ) or
-        
-        // Secondary detection: suspicious variable with eval
         (
             ($suspicious_var1 or $suspicious_var2) and
             ($eval_pattern1 or $eval_pattern2 or $obfuscated_eval1 or $obfuscated_eval2)
         ) or
-        
-        // High confidence pattern: multiple suspicious indicators
         (
             #b64_github_raw >= 1 and
             #eval_pattern1 >= 1 and
@@ -525,31 +512,23 @@ rule PHP_Backdoor_Base64_Remote_Execution
         date = "2025-08-05"
         severity = "high"
         category = "backdoor"
-        
+
     strings:
-        // Base64 decode with eval
-        $b64_decode_eval = /eval\s*\([^)]*base64_decode\s*\(/
-        
-        // Common base64 encoded malicious URLs
-        $b64_http = /aHR0cHM6Ly9b[A-Za-z0-9+\/]+=*/
+        $b64_decode_eval = /eval\s*\(\s*[^)]{1,100}base64_decode\s*\(/
+        $b64_http = /aHR0cHM6Ly9bA-Za-z0-9+\/]{10,100}={0,2}/
         $b64_raw_github = "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQu"
-        
-        // Suspicious file extensions in base64
-        $b64_php_ext = /[A-Za-z0-9+\/]*cGhw[A-Za-z0-9+\/]*/  // "php" in base64
-        $b64_txt_ext = /[A-Za-z0-9+\/]*dHh0[A-Za-z0-9+\/]*/  // "txt" in base64
-        
-        // Remote file inclusion patterns
-        $remote_include = /include\s*\(\s*[^)]*base64_decode/
-        $remote_require = /require\s*\(\s*[^)]*base64_decode/
-        
+
+        $b64_php_ext = /[A-Za-z0-9+\/]{0,20}cGhw[A-Za-z0-9+\/]{0,20}/
+        $b64_txt_ext = /[A-Za-z0-9+\/]{0,20}dHh0[A-Za-z0-9+\/]{0,20}/
+
+        $remote_include = /include\s*\(\s*[^)]{1,100}base64_decode/
+        $remote_require = /require\s*\(\s*[^)]{1,100}base64_decode/
+
     condition:
-        // PHP file detection
         (uint32(0) == 0x3c3f7068 or uint16(0) == 0x3c3f) and
-        
-        // Malicious patterns
         (
             ($b64_decode_eval and ($b64_http or $b64_raw_github)) or
-            ($remote_include or $remote_require) and ($b64_php_ext or $b64_txt_ext) or
+            (($remote_include or $remote_require) and ($b64_php_ext or $b64_txt_ext)) or
             (#b64_http >= 2 and $b64_decode_eval)
         )
 }
@@ -562,33 +541,24 @@ rule PHP_Suspicious_Curl_Remote_Execution
         date = "2025-08-05"
         severity = "medium"
         category = "suspicious"
-        
+
     strings:
-        // Curl patterns
         $curl_init = "curl_init"
         $curl_exec = "curl_exec"
         $curl_setopt = "CURLOPT_RETURNTRANSFER"
-        
-        // Suspicious curl usage with eval
-        $curl_eval = /curl_exec[^;]*;[^}]*eval\s*\(/s
-        
-        // Remote URL patterns
-        $remote_url1 = /https?:\/\/[a-zA-Z0-9.-]+\/[^\s'")}]*(\.php|\.txt|backdoor|shell)/
+
+        $curl_eval = /curl_exec[^;]{1,200};.{1,200}eval\s*\(/s
+
+        $remote_url1 = /https?:\/\/[a-zA-Z0-9.-]{1,100}\/[^\s'")}]*(\.php|\.txt|backdoor|shell)/
         $remote_url2 = /raw\.githubusercontent\.com/
         $remote_url3 = /pastebin\.com\/raw/
-        
-        // Dynamic function calls
-        $dynamic_call = /call_user_func\s*\(\s*\$[a-zA-Z_]/
-        $variable_func = /\$[a-zA-Z_][a-zA-Z0-9_]*\s*\([^)]*\$[a-zA-Z_]/
-        
+
+        $dynamic_call = /call_user_func\s*\(\s*\$[a-zA-Z_]{1,20}/
+        $variable_func = /\$[a-zA-Z_][a-zA-Z0-9_]{0,20}\s*\([^)]{0,100}\$[a-zA-Z_]{1,20}/
+
     condition:
-        // PHP file
         (uint32(0) == 0x3c3f7068 or uint16(0) == 0x3c3f) and
-        
-        // Curl usage indicators
         all of ($curl_*) and
-        
-        // Suspicious patterns
         (
             $curl_eval or
             ($remote_url1 or $remote_url2 or $remote_url3) or
@@ -606,32 +576,26 @@ rule PHP_Backdoor_WordPress_Config_Infection
         severity = "critical"
         category = "backdoor"
         reference = "WordPress wp-config.php infection"
-        
+
     strings:
-        // WordPress config indicators
         $wp_config1 = "wp-config.php"
         $wp_config2 = "DB_NAME"
         $wp_config3 = "WordPress"
         $wp_config4 = "ABSPATH"
-        
-        // Malicious code in config context
-        $malicious_eval = /eval\s*\([^)]*get\s*\([^)]*base64_decode/
-        $malicious_func = /function\s+get\s*\([^}]*curl_/s
-        
-        // Suspicious placement patterns
-        $before_abspath = /eval[^}]*ABSPATH/s
-        $after_db_config = /DB_HOST[^}]*eval/s
-        
+
+        $malicious_eval = /eval\s*\([^)]{1,100}get\s*\([^)]{1,100}base64_decode/
+        $malicious_func = /function\s+get\s*\([^)]{1,100}\)\s*\{.{1,300}curl_/s
+
+        $before_abspath = /eval.{1,300}ABSPATH/s
+        $after_db_config = /DB_HOST.{1,300}eval/s
+
     condition:
-        // WordPress config file detection
         any of ($wp_config*) and
-        
-        // Malicious code injection
         ($malicious_eval or $malicious_func) and
-        
-        // Context-aware detection
-        ($before_abspath or $after_db_config or 
-         (filesize < 50KB and #malicious_eval >= 1))
+        (
+            $before_abspath or $after_db_config or 
+            (filesize < 50KB and #malicious_eval >= 1)
+        )
 }
 
 rule PHP_Anti_False_Positive_Whitelist
@@ -642,25 +606,21 @@ rule PHP_Anti_False_Positive_Whitelist
         date = "2025-08-05"
         severity = "info"
         category = "whitelist"
-        
+
     strings:
-        // Legitimate framework patterns
         $laravel = "Illuminate\\"
         $symfony = "Symfony\\"
         $wordpress_core = "wp-includes/version.php"
         $drupal_core = "core/lib/Drupal"
-        
-        // Legitimate eval usage (though still risky)
-        $legitimate_eval1 = /eval\s*\(\s*['"][^'"]*return[^'"]*['"]/ // return statements
-        $legitimate_eval2 = /eval\s*\(\s*\$[a-zA-Z_][a-zA-Z0-9_]*\s*\.\s*['"]\s*;\s*['"]/ // simple concatenation
-        
-        // Common false positive patterns
+
+        $legitimate_eval1 = /eval\s*\(\s*['"][^'"]{1,100}return[^'"]{1,100}['"]/
+        $legitimate_eval2 = /eval\s*\(\s*\$[a-zA-Z_]{1,20}\s*\.\s*['"]\s*;\s*['"]/
+
         $phpunit = "PHPUnit"
         $composer = "composer"
-        $test_file = /test.*\.php$/
-        
+        $test_file = /test.{0,100}\.php$/
+
     condition:
-        // Don't trigger on whitelisted files
         any of ($laravel, $symfony, $wordpress_core, $drupal_core, $phpunit, $composer) or
         $test_file or
         $legitimate_eval1 or $legitimate_eval2
