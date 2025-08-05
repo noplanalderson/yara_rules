@@ -870,3 +870,28 @@ rule Fake_Gmaps_Webshell
     condition:
         $php and all of ($func*)
 }
+
+rule Solevisible_Simple_Upload
+{
+    meta:
+        description = "Detects Solevisible Simple File Upload"
+        author = "TangerangKota-CSIRT"
+        date = "2025-08-05"
+        severity = "critical"
+        tags = "php backdoor simple-upload"
+
+    strings:
+        $php = "<?php" nocase
+        $signature = "solevisible" nocase ascii
+        $str1 = "$_SERVER['REMOTE_ADDR']" ascii
+        $str2 = "$_POST['_upl']" ascii
+        $str3 = "enctype='multipart/form-data'"
+        $func = "@move_uploaded_file(" ascii
+
+    condition:
+        $php and (
+            $signature or (
+                    all of ($str*) and $func
+                )
+            )
+}
