@@ -11,6 +11,7 @@ rule Detect_Gambling_HTMLContent {
         keywords5 = "/racikansobet|agen777|maxwin?n/i"
 
     strings:
+        $html = "html" ascii nocase
         $keywords1 = /slot (gacor|online|toto|online|dana|gacor gampang menang)/i
         $keywords2 = /toto (canada|hk|indonesia|thailand)/i
         $keywords3 = /judi (online|bola|slot)/i
@@ -18,5 +19,5 @@ rule Detect_Gambling_HTMLContent {
         $keywords5 = /racikansobet|agen777|maxwin?n/i
 
     condition:
-        1 of ($keywords1, $keywords2, $keywords3, $keywords4, $keywords5)
+        $html and 1 of ($keywords1, $keywords2, $keywords3, $keywords4, $keywords5)
 }
