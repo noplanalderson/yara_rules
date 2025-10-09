@@ -251,19 +251,22 @@ rule LitespeedShell
         $pattern = /move_uploaded_file\s*\(\s*\$_FILES\[[^\]]+\]\["tmp_name"\]\s*,\s*\$[a-zA-Z0-9_]+\s*\)/
 
     condition:
+        uint16(0) == 0x3f3c and
         (
             (
-                all of ($func3, $func5, $func8, $func11) and 
-                any of ($var*)
-            ) or 
-            (
-                (4 of ($func1, $func2, $func4, $func6, $func7, $func9, $func10, $func11, $func12, $func13, $func14)) and
-                $pattern and
-                any of ($var*) and
-                any of ($str*)
+                (
+                    all of ($func3, $func5, $func8, $func11) and 
+                    any of ($var*)
+                ) or 
+                (
+                    (4 of ($func1, $func2, $func4, $func6, $func7, $func9, $func10, $func11, $func12, $func13, $func14)) and
+                    $pattern and
+                    any of ($var*) and
+                    any of ($str*)
+                )
+            ) or (
+                any of ($func*) and $pattern
             )
-        ) or (
-            any of ($func*) and $pattern
         )
 }
 
