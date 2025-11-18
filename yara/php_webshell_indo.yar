@@ -1828,11 +1828,11 @@ rule Webshell_string_concat {
 
     strings:
         $php = "<?php"
-        $concatenated_str = /(\$(.*).*\.=.*"(.*)";\n){10,}/i
-        $func1 = "set_time_limit(0)"
-        $func2 = "error_reporting(0)"
-        $func3 = "eval("
+        $concatenated_str = /\$(\w){1,10}\s?\.=\s?"([\w\+]{4,10})";/i
+        $func1 = "set_time_limit(0);" ascii
+        $func2 = "error_reporting(0);" ascii
+        $func3 = "eval(" ascii
     
     condition:
-        filesize < 1MB and all of them
+        $php at 0 and filesize < 1MB and $concatenated_str and all of ($func*)
 }
