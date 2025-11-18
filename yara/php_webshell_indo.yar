@@ -597,7 +597,7 @@ rule PHP_Backdoor_WordPress_Config_Infection
         ($malicious_eval or $malicious_func) and
         (
             $before_abspath or $after_db_config or 
-            (filesize < 50KB and #malicious_eval >= 1)
+            (filesize < 50KB and $malicious_eval)
         )
 }
 
@@ -897,4 +897,942 @@ rule Solevisible_Simple_Upload
                     all of ($str*) and $func
                 )
             )
+}
+
+rule CGI_Webshell_Base64_Command_Execution {
+    meta:
+        description = "Deteksi CGI web shell dengan eksekusi command via base64"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        reference = "Generic CGI web shell with base64 encoded command execution"
+        category = "webshell"
+        
+    strings:
+        // CGI headers
+        $cgi_header1 = "Content-type: text/html" nocase
+        $cgi_header2 = "Content-type:text/html" nocase
+        
+        // Base64 operations
+        $base64_decode1 = "base64 --decode"
+        $base64_decode2 = "base64.b64decode"
+        $base64_decode3 = "decode_base64"
+        $base64_decode4 = "base64_decode"
+        
+        // Command execution patterns
+        $exec1 = "eval ${" nocase
+        $exec2 = "os.popen" nocase
+        $exec3 = "system(" nocase
+        $exec4 = /child_stdin,\s*child_stdout\s*=\s*os\.popen2/
+        
+        // CGI variable parsing
+        $cgi_var1 = "REQUEST_METHOD" nocase
+        $cgi_var2 = "QUERY_STRING" nocase
+        $cgi_var3 = "CONTENT_LENGTH" nocase
+        $cgi_var4 = "STDIN" nocase
+        
+        // Suspicious parameter names
+        $param_cmd = /['"]cmd['"]/
+        $param_check = /['"]check['"]/
+        
+        // POST data reading
+        $post_read1 = "read(STDIN"
+        $post_read2 = "read -N $CONTENT_LENGTH"
+        $post_read3 = "cgi.FieldStorage"
+        
+    condition:
+        // File size reasonable for a web shell (< 10KB)
+        filesize < 10KB and
+        
+        // Must have CGI header
+        any of ($cgi_header*) and
+        
+        // Must have base64 decode
+        any of ($base64_decode*) and
+        
+        // Must have command execution
+        any of ($exec*) and
+
+        // Must have post read
+        any of ($post_read*) and
+        
+        // Must have CGI variable handling
+        2 of ($cgi_var*) and
+        
+        // Must have suspicious parameter names
+        all of ($param_*)
+}
+
+rule Bash_CGI_Webshell {
+    meta:
+        description = "Deteksi Bash CGI web shell dengan eval command"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        hash1 = "Sample hash of malicious file 1"
+        category = "webshell"
+        filetype = "bash"
+        
+    strings:
+        $shebang = "#!/bin/bash"
+        
+        // CGI functions
+        $func1 = "function cgi_get_POST_vars"
+        $func2 = "function cgi_decodevar"
+        $func3 = "function cgi_getvars"
+        
+        // Base64 decode with eval
+        $pattern1 = /query=\$\(echo \$cmd \| base64 --decode\)/
+        $pattern2 = /eval \$\{query\}/
+        
+        // CGI environment
+        $env1 = "$REQUEST_METHOD"
+        $env2 = "$QUERY_STRING"
+        $env3 = "$CONTENT_LENGTH"
+        
+        // Output pattern
+        $output = "<pre>" nocase
+        
+    condition:
+        $shebang at 0 and
+        all of ($func*) and
+        all of ($pattern*) and
+        2 of ($env*) and
+        $output
+}
+
+rule Python_CGI_Webshell {
+    meta:
+        description = "Deteksi Python CGI web shell dengan command execution"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        hash1 = "Sample hash of malicious file 2"
+        category = "webshell"
+        filetype = "python"
+        
+    strings:
+        $shebang = "#!/usr/bin/python"
+        
+        // Python imports
+        $import1 = "import os"
+        $import2 = "import cgi"
+        $import3 = "import base64"
+        $import4 = "import cgitb"
+        
+        // CGI form handling
+        $cgi_form = "cgi.FieldStorage"
+        
+        // Base64 decode
+        $base64_op = "base64.b64decode"
+        
+        // Command execution
+        $exec1 = "os.popen2"
+        $exec2 = /child_stdin,\s*child_stdout/
+        
+        // Parameter retrieval
+        $param1 = "form.getvalue('cmd')"
+        $param2 = "form.getvalue('check')"
+        
+        // Output
+        $output = "Content-type:text/html"
+        
+    condition:
+        $shebang at 0 and
+        3 of ($import*) and
+        $cgi_form and
+        $base64_op and
+        any of ($exec*) and
+        all of ($param*) and
+        $output
+}
+
+rule Perl_CGI_Webshell {
+    meta:
+        description = "Deteksi Perl CGI web shell dengan system command"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        hash1 = "Sample hash of malicious file 3"
+        category = "webshell"
+        filetype = "perl"
+        
+    strings:
+        $shebang = /^#!\/usr\/(local\/)?bin\/perl/
+        
+        // Perl modules
+        $module = "use MIME::Base64"
+        
+        // Base64 decode
+        $base64 = "decode_base64"
+        
+        // CGI environment
+        $env1 = "$ENV{'REQUEST_METHOD'}"
+        $env2 = "$ENV{'CONTENT_LENGTH'}"
+        
+        // STDIN reading
+        $stdin = "read(STDIN"
+        
+        // Command execution
+        $exec = /system\(decode_base64/
+        
+        // Parameter parsing
+        $param_parse1 = "split(/&/"
+        $param_parse2 = "split(/=/"
+        
+        // Suspicious parameters
+        $param_cmd = /$in\{[\"']cmd[\"']\}/
+        $param_check = /$in\{[\"']check[\"']\}/
+        
+    condition:
+        $shebang at 0 and
+        $module and
+        $base64 and
+        all of ($env*) and
+        $stdin and
+        $exec and
+        all of ($param_parse*) and
+        all of ($param_cmd, $param_check)
+}
+
+rule Generic_CGI_Base64_Backdoor {
+    meta:
+        description = "Deteksi generic CGI backdoor dengan base64 encoding"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "high"
+        category = "webshell"
+        
+    strings:
+        // Shebangs
+        $shebang1 = "#!/bin/bash"
+        $shebang2 = "#!/usr/bin/python"
+        $shebang3 = /^#!\/usr\/(local\/)?bin\/perl/
+        
+        // CGI indicators
+        $cgi1 = "Content-type:" nocase
+        $cgi2 = "REQUEST_METHOD" nocase
+        $cgi3 = "CONTENT_LENGTH" nocase
+        
+        // Base64 patterns
+        $b64_1 = "base64" nocase
+        $b64_2 = "decode" nocase
+        
+        // Command execution keywords
+        $cmd1 = "eval"
+        $cmd2 = "system"
+        $cmd3 = "popen"
+        $cmd4 = "exec"
+        
+        // Suspicious parameter pattern
+        $param = /['"\$]\w*\{?['"]?(cmd|command|execute|shell)['"]\}?/ nocase
+        
+        // HTML pre tag (common in web shells for output)
+        $html_pre = "<pre>" nocase
+        
+    condition:
+        filesize < 20KB and
+        any of ($shebang*) and
+        2 of ($cgi*) and
+        all of ($b64_*) and
+        any of ($cmd*) and
+        $param and
+        $html_pre
+}
+
+rule Webshell_Suspicious_Function_Combinations {
+    meta:
+        description = "Deteksi kombinasi fungsi mencurigakan dalam CGI scripts"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "high"
+        category = "webshell"
+        
+    strings:
+        // Decoding functions
+        $decode1 = "decode" nocase
+        $decode2 = "b64decode"
+        $decode3 = "base64_decode"
+        $decode4 = "--decode"
+        
+        // Execution functions
+        $exec1 = "eval" nocase
+        $exec2 = "system" nocase
+        $exec3 = "exec" nocase
+        $exec4 = "popen" nocase
+        $exec5 = "shell_exec"
+        $exec6 = "passthru"
+        
+        // Input handling
+        $input1 = "REQUEST_METHOD" nocase
+        $input2 = "POST" nocase
+        $input3 = "STDIN" nocase
+        $input4 = "FieldStorage"
+        $input5 = "read(" nocase
+        
+        // Output
+        $output1 = "Content-type" nocase
+        $output2 = "text/html" nocase
+        
+    condition:
+        filesize < 50KB and
+        any of ($decode*) and
+        2 of ($exec*) and
+        2 of ($input*) and
+        all of ($output*)
+}
+
+rule Webshell_Double_Encoding_Pattern {
+    meta:
+        description = "Deteksi pola double encoding (base64 + execution)"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        category = "webshell"
+        
+    strings:
+        // Pattern: decode parameter then execute
+        $pattern1 = /base64[^)]{0,50}decode[^)]{0,50}(eval|system|exec|popen)/
+        $pattern2 = /decode_base64[^)]{0,50}system/
+        $pattern3 = /b64decode[^)]{0,50}(eval|exec|system)/
+        
+        // Variable assignment from decoded input
+        $var_decode1 = /\w+\s*=\s*[^;]{0,100}base64[^;]{0,50}decode/
+        $var_decode2 = /\w+\s*=\s*decode_base64/
+        
+        // CGI context
+        $cgi = /Content-type:\s*text\/html/i
+        
+    condition:
+        filesize < 30KB and
+        $cgi and
+        (any of ($pattern*) or 2 of ($var_decode*))
+}
+
+rule Webshell_Command_Parameter_Names {
+    meta:
+        description = "Deteksi nama parameter command yang umum digunakan web shell"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "medium"
+        category = "webshell"
+        
+    strings:
+        $shebang = /^#!/
+        
+        // Suspicious parameter names
+        $param1 = /['"\$]\{?['"]?cmd['"]?\}?[^a-zA-Z]/
+        $param2 = /['"\$]\{?['"]?command['"]?\}?[^a-zA-Z]/
+        $param3 = /['"\$]\{?['"]?execute['"]?\}?[^a-zA-Z]/
+        $param4 = /['"\$]\{?['"]?shell['"]?\}?[^a-zA-Z]/
+        $param5 = /['"\$]\{?['"]?exec['"]?\}?[^a-zA-Z]/
+        
+        // Additional suspicious parameter
+        $param_check = /['"\$]\{?['"]?check['"]?\}?[^a-zA-Z]/
+        
+        // Execution context
+        $exec = /(eval|system|exec|popen)/
+        
+        // CGI context
+        $cgi = "REQUEST_METHOD"
+        
+    condition:
+        $shebang at 0 and
+        $cgi and
+        $exec and
+        2 of ($param*) and
+        $param_check
+}
+
+rule Solevisible_htaccess {
+    meta:
+        description = "Solevisible HtAccess for running alfa webshell backconnect"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "medium"
+        category = "backconnect"
+
+    strings:
+        $type = "x-httpd-cgi" ascii
+        $handler = "cgi-script" ascii
+        $signature = ".alfa" ascii
+
+    condition:
+        filesize < 1KB and all of them
+}
+
+rule FileLoader_webshell {
+    meta:
+        description = "FileLoader Webshell"
+        author = "Mr. Naeem"
+        date = "2025-11-18"
+        severity = "high"
+        category = "webshell"
+
+    strings:
+        $class_name1 = "FileLoader" nocase
+        $class_name2 = "FindExecutor" nocase
+        $malfunc1 = "proc_open(" ascii
+        $malfunc2 = "is_resource(" ascii
+        $malfunc3 = "stream_get_contents(" ascii
+        $malfunc4 = "proc_close(" ascii
+        
+    condition:
+        uint16(0) == 0x3f3c and
+        (
+            all of ($class_name*) and all of ($malfunc*)
+        )
+}
+
+rule Webshell_Downloader {
+    meta:
+        description = "Webshell Downloader"
+        author = "Mr. Naeem"
+        date = "2025-11-18"
+        severity = "high"
+        category = "webshell"
+
+    strings:
+        $func1 = "set_time_limit(0)" ascii
+        $func2 = "move_uploaded_file(" ascii
+        $func3 = "curl_exec(" ascii
+        $func4 = "fopen(" ascii
+        $func5 = "fclose(" ascii
+        $str1 = "<form method='POST' enctype='multipart/form-data'>" nocase ascii
+        $str2 = "FILTER_VALIDATE_URL" ascii
+    
+    condition:
+        uint16(0) == 0x3f3c and
+        (
+            $func1 and ($func2 or all of ($func2, $func3, $func4, $func5)) and 1 of ($str*)
+        )
+}
+
+rule BotCloaker {
+    meta:
+        description = "SEO Cloaker"
+        author = "Mr. Naeem"
+        date = "2025-11-18"
+        severity = "medium"
+        category = "webshell"
+
+    strings:
+        $func1 = "is_bot()" nocase ascii
+        $func2 = "file_get_contents(" ascii
+        $str1 = "HTTP_USER_AGENT" ascii
+        $str2 = /\"(bot|ahrefs|google|bingbot|googlebot|yandexbot|baiduspider|duckduckbot|facebookexternalhit|facebookbot|yahoo)\"/i
+        $str3 = /https?:\/\/([a-z0-9\-.]+)./i
+
+    condition:
+        uint16(0) == 0x3f3c and
+        (
+            1 of ($func*) and all of ($str*)
+        )
+}
+
+rule PHP_Webshell_UAF_Exploit {
+    meta:
+        description = "Deteksi PHP web shell dengan UAF (Use-After-Free) exploit untuk RCE"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        category = "webshell"
+        subcategory = "php_exploit"
+        reference = "PHP UAF exploit with file manager capabilities"
+        
+    strings:
+        $php_tag = "<?php"
+        
+        // UAF exploit functions
+        $uaf_func1 = "function str2ptr(&$str, $p = 0, $s = 8)"
+        $uaf_func2 = "function ptr2str($ptr, $m = 8)"
+        $uaf_func3 = "function write(&$str, $p, $v, $n = 8)"
+        $uaf_func4 = "function leak($addr, $p = 0, $s = 8)"
+        $uaf_func5 = "function parse_elf($base)"
+        $uaf_func6 = "function get_binary_base($binary_leak)"
+        $uaf_func7 = "function get_system($basic_funcs)"
+        
+        // UAF exploit classes
+        $class_ryat = /class\s+ryat\s*\{[^}]*__destruct/
+        $class_helper = /class\s+Helper\s*\{[^}]*public\s+\$a,\s*\$b,\s*\$c,\s*\$d/
+        
+        // UAF payload patterns
+        $uaf_payload = /'a:4:\{i:0;i:1;i:1;a:1:\{i:0;O:4:"ryat":2:\{s:4:"ryat";R:3;s:4:"chtg";i:2;\}\}i:1;i:3;i:2;R:5;\}'/
+        
+        // Memory manipulation
+        $mem_manip1 = "$closure_handlers = str2ptr($abc, 0)"
+        $mem_manip2 = "$php_heap = str2ptr($abc, 0x58)"
+        $mem_manip3 = "write($abc, 0x"
+        $mem_manip4 = "$binary_leak = leak($closure_handlers"
+        
+        // ELF parsing (Linux exploitation)
+        $elf_check1 = "$e_type = leak($base, 0x10, 2)"
+        $elf_check2 = "$e_phoff = leak($base, 0x20)"
+        $elf_check3 = "if($leak == 0x10102464c457f)"
+        
+        // System function hooking
+        $system_hook1 = "if(!($zif_system = get_system($basic_funcs)))"
+        $system_hook2 = "write($abc, 0xd0 + 0x68, $zif_system)"
+        $system_hook3 = "($helper->b)($xmd)"
+        
+        // File manager functions
+        $fm_func1 = "function download_file($download)"
+        $fm_func2 = "function delete_file($delete)"
+        $fm_func3 = "function edit_file($edit)"
+        $fm_func4 = "function upload_file($path,$file)"
+        
+        // Error suppression (common in malware)
+        $suppress1 = "error_reporting(0)"
+        $suppress2 = "ini_set('display_errors', 0)"
+        $suppress3 = "ignore_user_abort(true)"
+        $suppress4 = "set_time_limit(0)"
+        
+    condition:
+        filesize < 50KB and
+        $php_tag at 0 and
+        (
+            // Strong UAF exploit indicators
+            (
+                4 of ($uaf_func*) and
+                any of ($class_*) and
+                any of ($mem_manip*)
+            ) or
+            
+            // UAF payload + system hook
+            (
+                $uaf_payload and
+                any of ($system_hook*)
+            ) or
+            
+            // ELF parsing + system function
+            (
+                2 of ($elf_check*) and
+                any of ($system_hook*)
+            ) or
+            
+            // Complete package: exploit + file manager
+            (
+                3 of ($uaf_func*) and
+                3 of ($fm_func*) and
+                2 of ($suppress*)
+            )
+        )
+}
+
+rule PHP_Webshell_Advanced_File_Manager {
+    meta:
+        description = "Deteksi PHP web shell dengan file manager lengkap"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        category = "webshell"
+        subcategory = "file_manager"
+        
+    strings:
+        $php = "<?php"
+        
+        // File operations
+        $file_op1 = "function download_file("
+        $file_op2 = "function delete_file("
+        $file_op3 = "function edit_file("
+        $file_op4 = "function save_edit("
+        $file_op5 = "function view_file("
+        $file_op6 = "function new_file("
+        $file_op7 = "function new_dir("
+        $file_op8 = "function upload_file("
+        
+        // Directory operations
+        $dir_op1 = "function get_dir()"
+        $dir_op2 = "function get_path()"
+        $dir_op3 = "function get_back($path)"
+        $dir_op4 = "scandir($path)"
+        
+        // Authentication
+        $auth1 = "function admin_login()"
+        $auth2 = "password_verify"
+        $auth3 = "setcookie(md5($_SERVER['HTTP_HOST'])"
+        
+        // File info functions
+        $info1 = "function filesize_convert("
+        $info2 = "function fileTime("
+        $info3 = "posix_getpwuid(fileowner"
+        
+        // HTML generation
+        $html1 = "function makeForm("
+        $html2 = "function makeTable("
+        $html3 = "function makeLink("
+        $html4 = "function makeInput("
+        
+        // Suspicious parameters
+        $param1 = "get_get('delete')"
+        $param2 = "get_get('edit')"
+        $param3 = "get_get('download')"
+        $param4 = "get_post('upload')"
+        
+    condition:
+        filesize < 100KB and
+        $php at 0 and
+        (
+            // File manager core
+            (
+                5 of ($file_op*) and
+                2 of ($dir_op*)
+            ) or
+            
+            // Complete web shell
+            (
+                4 of ($file_op*) and
+                any of ($auth*) and
+                2 of ($html*) and
+                2 of ($param*) and
+                all of ($info*)
+            )
+        )
+}
+
+rule PHP_Webshell_Memory_Corruption_Exploit {
+    meta:
+        description = "Deteksi PHP memory corruption exploit (UAF/Type confusion)"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        category = "exploit"
+        subcategory = "memory_corruption"
+        
+    strings:
+        $php = "<?php"
+        
+        // Memory address manipulation
+        $mem1 = /\$address\s*<<=\s*8/
+        $mem2 = /\$address\s*\|=\s*ord\(\$str\[\$p\+\$j\]\)/
+        $mem3 = /for\s*\(\s*\$[ij]\s*=\s*\$s-1;\s*\$[ij]\s*>=\s*0/
+        
+        // Pointer operations
+        $ptr1 = /function\s+str2ptr\s*\(/
+        $ptr2 = /function\s+ptr2str\s*\(/
+        $ptr3 = /\$ptr\s*>>=\s*8/
+        
+        // Memory write
+        $write1 = /\$str\[\$p\s*\+\s*\$i\]\s*=\s*chr\(\$v\s*&\s*0xff\)/
+        $write2 = /write\s*\(\s*\$\w+,\s*0x[0-9a-f]+/i
+        
+        // Closure/Object manipulation
+        $closure1 = "$helper->b = function ($x) { };"
+        $closure2 = "$closure_handlers = str2ptr"
+        $closure3 = "$closure_obj = str2ptr"
+        
+        // Fake object creation
+        $fake1 = "# fake value"
+        $fake2 = "# fake reference"
+        $fake3 = "$fake_obj_offset"
+        
+        // GC manipulation
+        $gc = "gc_collect_cycles()"
+        
+        // Unserialize exploit
+        $unser = /unserialize\s*\(\s*\$poc\s*\)/
+        
+    condition:
+        filesize < 100KB and
+        $php at 0 and
+        (
+            // Memory manipulation pattern
+            (
+                2 of ($mem*) and
+                2 of ($ptr*) and
+                any of ($write*)
+            ) or
+            
+            // Closure exploitation
+            (
+                2 of ($closure*) and
+                any of ($fake*) and
+                $gc
+            ) or
+            
+            // Complete UAF exploit
+            (
+                any of ($ptr*) and
+                any of ($write*) and
+                $unser and
+                $gc
+            )
+        )
+}
+
+rule PHP_Webshell_Linux_ELF_Parser {
+    meta:
+        description = "Deteksi PHP yang melakukan parsing ELF binary (Linux exploitation)"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        category = "exploit"
+        subcategory = "elf_manipulation"
+        
+    strings:
+        $php = "<?php"
+        
+        // ELF header parsing
+        $elf1 = "$e_type = leak($base, 0x10, 2)"
+        $elf2 = "$e_phoff = leak($base, 0x20)"
+        $elf3 = "$e_phentsize = leak($base, 0x36, 2)"
+        $elf4 = "$e_phnum = leak($base, 0x38, 2)"
+        
+        // ELF program header
+        $ph1 = "$p_type  = leak($header, 0, 4)"
+        $ph2 = "$p_flags = leak($header, 4, 4)"
+        $ph3 = "$p_vaddr = leak($header, 0x10)"
+        $ph4 = "$p_memsz = leak($header, 0x28)"
+        
+        // PT_LOAD flags check
+        $ptload1 = "if($p_type == 1 && $p_flags == 6)"
+        $ptload2 = "# PT_LOAD, PF_Read_Write"
+        $ptload3 = "if($p_type == 1 && $p_flags == 5)"
+        $ptload4 = "# PT_LOAD, PF_Read_exec"
+        
+        // ELF magic check
+        $magic = "if($leak == 0x10102464c457f)"
+        
+        // Binary base search
+        $base_search1 = "$start = $binary_leak & 0xfffffffffffff000"
+        $base_search2 = "for($i = 0; $i < 0x1000; $i++)"
+        $base_search3 = "$addr = $start - 0x1000 * $i"
+        
+    condition:
+        filesize < 100KB and
+        $php at 0 and
+        (
+            // ELF parsing
+            (
+                3 of ($elf*) and
+                2 of ($ph*)
+            ) or
+            
+            // PT_LOAD handling
+            (
+                any of ($ptload*) and
+                $magic
+            ) or
+            
+            // Binary base detection
+            (
+                all of ($base_search*) and
+                $magic
+            )
+        )
+}
+
+rule PHP_Webshell_System_Function_Hook {
+    meta:
+        description = "Deteksi PHP yang melakukan hooking system() function"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        category = "exploit"
+        subcategory = "function_hooking"
+        
+    strings:
+        $php = "<?php"
+        
+        // System function search
+        $sys1 = "function get_system($basic_funcs)"
+        $sys2 = "$f_name == 0x6d6574737973" // 'system' in hex
+        $sys3 = "if(!($zif_system = get_system("
+        
+        // Basic functions search
+        $basic1 = "function get_basic_funcs($base, $elf)"
+        $basic2 = "# 'constant' constant check"
+        $basic3 = "if($deref != 0x746e6174736e6f63)"
+        $basic4 = "# 'bin2hex' constant check"
+        $basic5 = "if($deref != 0x786568326e6962)"
+        
+        // Function hooking
+        $hook1 = "write($abc, 0xd0 + 0x38, 1, 4)" // internal func type
+        $hook2 = "write($abc, 0xd0 + 0x68, $zif_system)" // internal func handler
+        $hook3 = "# internal func handler"
+        
+        // Command execution
+        $exec1 = "($helper->b)($xmd)"
+        $exec2 = "function pwn($xmd)"
+        
+    condition:
+        filesize < 100KB and
+        $php at 0 and
+        (
+            // System function detection
+            (
+                2 of ($sys*) and
+                any of ($basic*)
+            ) or
+            
+            // Function hooking mechanism
+            (
+                2 of ($hook*) and
+                any of ($exec*)
+            ) or
+            
+            // Complete hooking chain
+            (
+                any of ($sys*) and
+                any of ($hook*) and
+                any of ($exec*)
+            )
+        )
+}
+
+rule PHP_Webshell_Cookie_Auth_Bypass {
+    meta:
+        description = "Deteksi PHP web shell dengan cookie-based authentication"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "high"
+        category = "webshell"
+        subcategory = "authentication"
+        
+    strings:
+        $php = "<?php"
+        
+        // Cookie authentication
+        $cookie1 = /setcookie\s*\(\s*md5\s*\(\s*\$_SERVER\['HTTP_HOST'\]\)/
+        $cookie2 = /if\s*\(\s*!isset\s*\(\s*\$_COOKIE\[md5\s*\(\s*\$_SERVER\['HTTP_HOST'\]\)\]\)/
+        
+        // Password verification
+        $pass1 = "password_verify($_POST['password']"
+        $pass2 = "$hashed_password = '$2y$"
+        
+        // Login form
+        $login1 = "function admin_login()"
+        $login2 = "<input type=\"password\" name=\"password\">"
+        
+        // Resource manipulation
+        $resource1 = "ignore_user_abort(true)"
+        $resource2 = "set_time_limit(0)"
+        $resource3 = "ini_set('memory_limit', '-1')"
+        $resource4 = "ini_set('max_execution_time', 5000)"
+        
+        // Error suppression
+        $error1 = "error_reporting(0)"
+        $error2 = "ini_set('display_errors', 0)"
+        
+    condition:
+        filesize < 100KB and
+        $php at 0 and
+        (
+            // Cookie-based auth
+            (
+                $cookie1 and $cookie2 and
+                any of ($pass*)
+            ) or
+            
+            // Login + resource manipulation
+            (
+                any of ($login*) and
+                3 of ($resource*) and
+                all of ($error*)
+            )
+        )
+}
+
+rule PHP_Webshell_Complete_Package {
+    meta:
+        description = "Deteksi PHP web shell lengkap dengan UAF exploit + file manager"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "critical"
+        category = "webshell"
+        subcategory = "complete_package"
+        reference = "Combined detection for full-featured web shell"
+        
+    strings:
+        $php = "<?php"
+        
+        // Core indicators from different components
+        $uaf = "function pwn($xmd)"
+        $fm = "function get_dir()"
+        $auth = "function admin_login()"
+        $exploit = "gc_collect_cycles()"
+        $elf = "function parse_elf($base)"
+        $system = "($helper->b)($xmd)"
+        
+        // Command input
+        $cmd_input1 = /<input type=['"](text|password)['"] name=['"]c['"]/
+        $cmd_input2 = /if\s*\(\s*isset\s*\(\s*\$_POST\['c'\]\)/
+        
+        // File operations
+        $file_ops = /(download|delete|edit|upload)_file\s*\(/
+        
+        // Memory operations
+        $mem_ops = /(str2ptr|ptr2str|leak|write)\s*\(/
+        
+    condition:
+        filesize < 100KB and
+        $php at 0 and
+        (
+            // Full package
+            (
+                $uaf and $fm and $auth
+            ) or
+            
+            // Exploit + file manager
+            (
+                $exploit and $elf and
+                #file_ops > 3
+            ) or
+            
+            // System hook + command input
+            (
+                $system and
+                any of ($cmd_input*) and
+                #mem_ops > 3
+            )
+        )
+}
+
+rule PHP_Webshell_Suspicious_Hex_Constants {
+    meta:
+        description = "Deteksi PHP dengan hex constants mencurigakan (exploit signatures)"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "high"
+        category = "exploit"
+        
+    strings:
+        $php = "<?php"
+        
+        // Magic numbers and constants
+        $hex1 = "0x746e6174736e6f63" // 'constant' in hex
+        $hex2 = "0x786568326e6962" // 'bin2hex' in hex
+        $hex3 = "0x6d6574737973" // 'system' in hex
+        $hex4 = "0x10102464c457f" // ELF magic
+        $hex5 = "0xfffffffffffff000"
+        
+        // Memory offsets
+        $offset1 = "0x68"
+        $offset2 = "0xd0"
+        $offset3 = "0x58"
+        
+    condition:
+        filesize < 100KB and
+        $php at 0 and
+        3 of ($hex*) and
+        2 of ($offset*)
+}
+
+rule Webshell_string_concat {
+    meta:
+        description = "Deteksi PHP encoded and concatenate string"
+        author = "Security Team"
+        date = "2025-11-18"
+        severity = "high"
+        category = "webshell"
+
+    strings:
+        $php = "<?php"
+        $concatenated_str = /(\$(.*).*\.=.*"(.*)";\n){10,}/i
+        $func1 = "set_time_limit(0)"
+        $func2 = "error_reporting(0)"
+        $func3 = "eval("
+    
+    condition:
+        filesize < 1MB and all of them
 }
